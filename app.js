@@ -1206,6 +1206,17 @@ function renderSrsCard() {
   flashcardEl.classList.toggle('flipped', ui.srsFlipped);
   document.getElementById('srs-reveal-wrap').hidden = ui.srsFlipped;
   document.getElementById('srs-rate-wrap').hidden = !ui.srsFlipped;
+  updateSeniorCardGuide();
+}
+
+function updateSeniorCardGuide() {
+  const el = document.getElementById('senior-card-guide');
+  if (!el) return;
+  if (!ui.srsFlipped) {
+    el.innerHTML = '👉 <strong>Krok 1:</strong> Přečti si českou větu a zkus si vzpomenout v hlavě. Pak klepni na zelené tlačítko <strong>Ukázat odpověď</strong>.';
+  } else {
+    el.innerHTML = '👉 <strong>Krok 2:</strong> Porovnej odpověď (můžeš kliknout na <em>Poslechnout pomalu</em>) a vyber dole jedno ze 3 tlačítek.';
+  }
 }
 
 function flipFlashcard() {
@@ -1214,6 +1225,7 @@ function flipFlashcard() {
   document.getElementById('flashcard').classList.add('flipped');
   document.getElementById('srs-reveal-wrap').hidden = true;
   document.getElementById('srs-rate-wrap').hidden = false;
+  updateSeniorCardGuide();
 }
 
 function gradeCurrentCard(grade) {
@@ -1268,7 +1280,7 @@ function gradeCurrentCard(grade) {
 const flashcardEl = document.getElementById('flashcard');
 
 flashcardEl.addEventListener('click', (e) => {
-  if (e.target.closest('.card-tool-btns')) return;
+  if (e.target.closest('.card-tool-btns') || e.target.closest('.senior-card-tools')) return;
   if (!ui.srsFlipped) flipFlashcard();
 });
 
@@ -1309,7 +1321,7 @@ let touchStartY = 0;
 let swiping = false;
 
 flashcardEl.addEventListener('touchstart', (e) => {
-  if (!ui.srsFlipped || isAnimatingGrade || e.target.closest('.card-tool-btns')) return;
+  if (!ui.srsFlipped || isAnimatingGrade || e.target.closest('.card-tool-btns') || e.target.closest('.senior-card-tools')) return;
   const t = e.touches[0];
   touchStartX = t.clientX;
   touchStartY = t.clientY;
@@ -1386,6 +1398,24 @@ document.getElementById('card-tip-btn').addEventListener('click', (e) => {
   e.stopPropagation();
   const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
   if (card) openTipModal(card.en, card.tip);
+});
+
+document.getElementById('senior-card-slow').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
+  if (card) speakEnglish(card.en, e.currentTarget, 0.62);
+});
+
+document.getElementById('senior-card-tip').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
+  if (card) openTipModal(card.en, card.tip);
+});
+
+document.getElementById('senior-card-show').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
+  if (card) openShowModal(card.en, card.cz);
 });
 
 document.querySelectorAll('.srs-btn').forEach((btn) => {

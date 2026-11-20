@@ -3160,3 +3160,72 @@ textarea:focus {
   pointer-events: none;
   z-index: 90;
 }
+
+/* ==========================================
+   JASNOST A NÁPOVĚDY KROK ZA KROKEM PRO SENIORY
+   ========================================== */
+.senior-only,
+.senior-only-inline {
+  display: none !important;
+}
+
+[data-profile="senior"] .senior-only {
+  display: block !important;
+}
+
+[data-profile="senior"] .senior-card-tools.senior-only {
+  display: flex !important;
+}
+
+[data-profile="senior"] .senior-only-inline {
+  display: inline !important;
+}
+
+[data-profile="senior"] .guide-btn-pill {
+  width: auto;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+[data-profile="senior"] .flashcard-back .card-tool-btns {
+  display: none !important;
+}
+
+[data-profile="senior"] .flashcard-inner {
+  min-height: 405px;
+}
+
+.senior-helper-banner {
+  background: var(--tip-bg);
+  border: 2px solid var(--tip-border);
+  border-bottom: 4px solid var(--tip-edge);
+  color: var(--tip-text);
+  border-radius: 14px;
+  padding: 9px 12px;
+  margin-bottom: 8px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.senior-card-tools {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.senior-tool-btn {
+  padding: 7px 11px;
+  font-size: 0.82rem;
+  background: var(--surface);
+  border: 2px solid var(--duo-blue);
+  border-bottom: 4px solid var(--duo-blue-edge);
+  color: var(--duo-blue-text);
+}

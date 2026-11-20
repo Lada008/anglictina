@@ -46,8 +46,8 @@
           <span class="dot"></span>
           <span id="header-due-count">0</span>
         </div>
-        <button type="button" class="icon-btn theme-btn" id="guide-btn" aria-label="Návod k aplikaci" title="Návod k aplikaci">
-          ❓
+        <button type="button" class="icon-btn theme-btn guide-btn-pill" id="guide-btn" aria-label="Návod k aplikaci" title="Návod k aplikaci">
+          ❓<span class="senior-only-inline"> Návod</span>
         </button>
         <button type="button" class="icon-btn theme-btn" id="theme-toggle-btn" aria-label="Přepnout tmavý režim" title="Tmavý / světlý režim">
           🌙
@@ -74,6 +74,9 @@
 
         <!-- Mode A: Šablony -->
         <div id="builder-templates-panel" class="builder-panel">
+          <div class="senior-helper-banner senior-only">
+            👉 <strong>Jak na to:</strong> Klepni na modré slovo v závorce a vyber jinou variantu. Pak klikni na zelené <strong>+ Do kartiček</strong>.
+          </div>
           <article class="card template-card compact-card">
             <div class="card-top-compact">
               <div class="card-top-left">
@@ -127,6 +130,9 @@
 
         <!-- Mode B: Skládačka -->
         <div id="builder-puzzle-panel" class="builder-panel" hidden>
+          <div class="senior-helper-banner senior-only">
+            👉 <strong>Jak na to:</strong> Klikej postupně na slova dole a poskládej větu. Když si nevíš rady, klikni nahoře na <strong>✨</strong> (doplní další slovo).
+          </div>
           <article class="card puzzle-card compact-card">
             <div class="card-top-compact">
               <div class="card-top-left">
@@ -202,6 +208,9 @@
 
         <!-- Flashcard Stage -->
         <div id="srs-stage" class="srs-stage">
+          <div class="senior-helper-banner senior-only" id="senior-card-guide">
+            👉 <strong>Krok 1:</strong> Přečti si českou větu a zkus si vzpomenout v hlavě. Pak klepni na zelené tlačítko <strong>Ukázat odpověď</strong>.
+          </div>
           <div class="flashcard-wrapper" id="flashcard" tabindex="0" role="button" aria-label="Klepnutím otočíš kartičku">
             <div class="swipe-indicator swipe-left" id="swipe-left-badge">⬅️ Nevím</div>
             <div class="swipe-indicator swipe-up" id="swipe-up-badge">⬆️ Těžké</div>
@@ -241,13 +250,19 @@
                   <div class="card-main-text en-highlight" id="card-en"></div>
                   <div class="phonetic-text card-phonetic" id="card-phonetic"></div>
                   <div class="card-cz-reminder" id="card-cz-back"></div>
+                  <div class="senior-card-tools senior-only">
+                    <button type="button" class="mini-btn senior-tool-btn" id="senior-card-slow">🐢 Poslechnout pomalu</button>
+                    <button type="button" class="mini-btn senior-tool-btn" id="senior-card-tip">💡 Vysvětlení</button>
+                    <button type="button" class="mini-btn senior-tool-btn" id="senior-card-show">📱 Zvětšit</button>
+                  </div>
                 </div>
                 <div class="card-face-footer">
-                  <div class="swipe-legend" aria-hidden="true">
+                  <div class="swipe-legend young-only" aria-hidden="true">
                     <span class="leg-left">⬅️ Nevím</span>
                     <span class="leg-up">⬆️ Těžké</span>
                     <span class="leg-right">Vím ➡️</span>
                   </div>
+                  <span class="tap-hint senior-only">Klepni dole na jedno ze 3 barevných tlačítek</span>
                 </div>
               </div>
             </div>
@@ -653,8 +668,8 @@
           <button type="button" class="mode-choice-card" data-profile="senior">
             <div class="mode-choice-icon">🌿</div>
             <div class="mode-choice-body">
-              <strong>Pohodový režim (Pro seniory &amp; klid)</strong>
-              <span>Větší čitelné písmo, velká přehledná tlačítka, žádný stres z časovačů a jasný postup.</span>
+              <strong>Pohodový režim (Pro seniory &amp; klidné učení)</strong>
+              <span>Větší čitelné písmo, české popisky u tlačítek, nápověda u každého kroku a žádný stres z času.</span>
             </div>
           </button>
         </div>
