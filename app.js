@@ -61,7 +61,6 @@ function decodePack(rawInput) {
   let code = rawInput.trim();
   if (!code) throw new Error('Prázdný kód');
 
-  // Extract ?pack= if user pasted a full URL
   if (code.includes('pack=')) {
     try {
       const url = new URL(code.startsWith('http') ? code : `https://x.local/?${code.split('?')[1] || code}`);
@@ -102,6 +101,13 @@ function decodePack(rawInput) {
 function createInitialState() {
   const today = todayISO();
   return {
+    theme: window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+    stats: {
+      streak: 0,
+      lastReviewDate: null,
+      reviewedToday: 0,
+      reviewedDate: today
+    },
     cards: INITIAL_PHRASES.map((p) => ({
       ...p,
       interval: 0,
@@ -125,6 +131,22 @@ function loadState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(init));
       return init;
     }
+    if (!parsed.stats) {
+      parsed.stats = { streak: 0, lastReviewDate: null, reviewedToday: 0, reviewedDate: todayISO() };
+    }
+    if (!parsed.theme) {
+      parsed.theme = 'light';
+    }
+    // Reset today's counter if date changed
+    if (parsed.stats.reviewedDate !== todayISO()) {
+      parsed.stats.reviewedToday = 0;
+      parsed.stats.reviewedDate = todayISO();
+    }
+    // Check if streak expired (more than 1 day gap)
+    if (parsed.stats.lastReviewDate && daysDiffFromToday(parsed.stats.lastReviewDate) < -1) {
+      parsed.stats.streak = 0;
+    }
+
     // Aktualizace fonetického přepisu na čistou češtinu u výchozích frází
     const initMap = new Map(INITIAL_PHRASES.map((p) => [p.id, p.phonetic]));
     let migrated = false;
@@ -153,6 +175,21 @@ function saveState() {
 
 let state = loadState();
 
+// --- Theme ---
+function applyTheme(theme) {
+  state.theme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = state.theme;
+  const metaTheme = document.getElementById('meta-theme-color');
+  if (metaTheme) metaTheme.setAttribute('content', state.theme === 'dark' ? '#0f172a' : '#0f766e');
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+}
+
+document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+  applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+  saveState();
+});
+
 // --- Toast ---
 let toastTimer = null;
 function showToast(msg) {
@@ -175,7 +212,7 @@ if ('speechSynthesis' in window) {
   };
 }
 
-function speakEnglish(text, btnEl) {
+function speakEnglish(text, btnEl, rate = 0.9) {
   if (!('speechSynthesis' in window)) {
     showToast('Hlasové čtení není v tomto prohlížeči podporováno.');
     return;
@@ -192,7 +229,7 @@ function speakEnglish(text, btnEl) {
     const utter = new SpeechSynthesisUtterance(text);
     activeUtterance = utter;
     utter.lang = 'en-US';
-    utter.rate = 0.9;
+    utter.rate = rate;
     utter.pitch = 1.0;
     utter.volume = 1.0;
 
@@ -218,7 +255,7 @@ function speakEnglish(text, btnEl) {
       cleanup();
       showToast('Zkontroluj, zda nemáš na telefonu zapnutý tichý režim.');
     };
-    speakTimer = setTimeout(cleanup, 6000);
+    speakTimer = setTimeout(cleanup, 7000);
 
     synth.speak(utter);
   } catch {
@@ -227,18 +264,42 @@ function speakEnglish(text, btnEl) {
   }
 }
 
+// --- Fullscreen Show-to-Local Modal ---
+let currentShowEn = '';
+function openShowModal(en, cz) {
+  currentShowEn = en;
+  document.getElementById('show-modal-en').textContent = en;
+  document.getElementById('show-modal-cz').textContent = cz || '';
+  document.getElementById('show-modal').hidden = false;
+}
+
+function closeShowModal() {
+  document.getElementById('show-modal').hidden = true;
+}
+
+document.getElementById('show-modal-close').addEventListener('click', closeShowModal);
+document.getElementById('show-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'show-modal') closeShowModal();
+});
+document.getElementById('show-modal-speak').addEventListener('click', (e) => {
+  if (currentShowEn) speakEnglish(currentShowEn, e.currentTarget, 0.9);
+});
+document.getElementById('show-modal-slow').addEventListener('click', (e) => {
+  if (currentShowEn) speakEnglish(currentShowEn, e.currentTarget, 0.62);
+});
+
 // --- App UI State ---
 const ui = {
   activeTab: 'builder',
   builderTopic: 'all',
   builderMode: 'templates',
   tplIndex: 0,
-  tplSlots: {}, // { [slotIdx]: optionIdx }
+  tplSlots: {},
   activeSlotIdx: null,
   puzIndex: 0,
   puzTokens: [],
-  puzBank: [], // { id, text, used }
-  puzPlaced: [], // { id, text }
+  puzBank: [],
+  puzPlaced: [],
   puzSolved: false,
   srsQueue: [],
   srsDoneCount: 0,
@@ -275,6 +336,7 @@ function updateDueIndicators() {
   const today = todayISO();
   const dueCount = state.cards.filter((c) => c.dueDate <= today).length;
   document.getElementById('header-due-count').textContent = String(dueCount);
+  document.getElementById('header-streak-count').textContent = String(state.stats?.streak || 0);
 
   const badge = document.getElementById('nav-due-badge');
   if (dueCount > 0) {
@@ -400,7 +462,6 @@ function renderTemplate() {
     }
   });
 
-  // Auto-open first slot picker if none selected yet so user sees options immediately
   const picker = document.getElementById('tpl-slot-picker');
   const optionsWrap = document.getElementById('tpl-slot-options');
   const activeSlot = slotRefs.find((s) => s.idx === ui.activeSlotIdx);
@@ -443,16 +504,26 @@ document.getElementById('tpl-next-btn').addEventListener('click', () => {
 });
 
 document.getElementById('tpl-speak-btn').addEventListener('click', (e) => {
-  const list = getFilteredTemplates();
-  const tpl = list[ui.tplIndex];
+  const tpl = getFilteredTemplates()[ui.tplIndex];
+  if (!tpl) return;
+  speakEnglish(buildTemplateResult(tpl).en, e.currentTarget, 0.9);
+});
+
+document.getElementById('tpl-slow-btn').addEventListener('click', (e) => {
+  const tpl = getFilteredTemplates()[ui.tplIndex];
+  if (!tpl) return;
+  speakEnglish(buildTemplateResult(tpl).en, e.currentTarget, 0.62);
+});
+
+document.getElementById('tpl-show-btn').addEventListener('click', () => {
+  const tpl = getFilteredTemplates()[ui.tplIndex];
   if (!tpl) return;
   const res = buildTemplateResult(tpl);
-  speakEnglish(res.en, e.currentTarget);
+  openShowModal(res.en, res.cz);
 });
 
 document.getElementById('tpl-save-btn').addEventListener('click', () => {
-  const list = getFilteredTemplates();
-  const tpl = list[ui.tplIndex];
+  const tpl = getFilteredTemplates()[ui.tplIndex];
   if (!tpl) return;
   const res = buildTemplateResult(tpl);
 
@@ -503,11 +574,13 @@ function setupPuzzle() {
   document.getElementById('puz-topic-badge').textContent = `${topicMeta.icon} ${topicMeta.label}`;
   document.getElementById('puz-counter').textContent = `${ui.puzIndex + 1} / ${list.length}`;
   document.getElementById('puz-cz-text').textContent = phrase.cz;
+  const puzIll = document.getElementById('puz-illustration');
+  if (puzIll) puzIll.innerHTML = TOPIC_ILLUSTRATIONS[phrase.topic] || TOPIC_ILLUSTRATIONS.camping;
 
   const phoneticEl = document.getElementById('puz-phonetic-text');
   phoneticEl.textContent = phrase.phonetic || '';
   phoneticEl.hidden = true;
-  document.getElementById('puz-hint-toggle').textContent = 'Ukázat fonetický přepis';
+  document.getElementById('puz-hint-toggle').textContent = 'Ukázat výslovnost';
 
   const tokens = phrase.en.trim().split(/\s+/);
   ui.puzTokens = tokens;
@@ -578,9 +651,11 @@ function handlePuzzleTap(item, btnEl) {
     }
     renderPuzzleBoard();
   } else {
-    btnEl.classList.remove('wrong-flash');
-    void btnEl.offsetWidth; // trigger reflow for animation
-    btnEl.classList.add('wrong-flash');
+    if (btnEl) {
+      btnEl.classList.remove('wrong-flash');
+      void btnEl.offsetWidth;
+      btnEl.classList.add('wrong-flash');
+    }
     feedbackEl.className = 'puzzle-feedback err';
     feedbackEl.textContent = '✕ Tohle slovo sem teď nepatří, zkus jiné.';
   }
@@ -590,7 +665,14 @@ document.getElementById('puz-hint-toggle').addEventListener('click', () => {
   const el = document.getElementById('puz-phonetic-text');
   const btn = document.getElementById('puz-hint-toggle');
   el.hidden = !el.hidden;
-  btn.textContent = el.hidden ? 'Ukázat fonetický přepis' : 'Skrýt fonetický přepis';
+  btn.textContent = el.hidden ? 'Ukázat výslovnost' : 'Skrýt výslovnost';
+});
+
+document.getElementById('puz-hint-word-btn').addEventListener('click', () => {
+  if (ui.puzSolved) return;
+  const expected = ui.puzTokens[ui.puzPlaced.length];
+  const match = ui.puzBank.find((b) => !b.used && b.text.toLowerCase() === expected.toLowerCase());
+  if (match) handlePuzzleTap(match, null);
 });
 
 document.getElementById('puz-reset-btn').addEventListener('click', () => setupPuzzle());
@@ -601,13 +683,12 @@ document.getElementById('puz-next-btn').addEventListener('click', () => {
 });
 
 document.getElementById('puz-speak-btn').addEventListener('click', (e) => {
-  const list = getFilteredPuzzlePhrases();
-  const phrase = list[ui.puzIndex];
-  if (phrase) speakEnglish(phrase.en, e.currentTarget);
+  const phrase = getFilteredPuzzlePhrases()[ui.puzIndex];
+  if (phrase) speakEnglish(phrase.en, e.currentTarget, 0.9);
 });
 
 // ==========================================
-// TAB 2: KARTIČKY (SRS)
+// TAB 2: KARTIČKY (SRS + SWIPE)
 // ==========================================
 function initSrsSession(forceExtra = false) {
   const today = todayISO();
@@ -629,6 +710,24 @@ function getNextGoodInterval(card) {
   return Math.round(card.interval * 2.2);
 }
 
+function recordReviewStat() {
+  const today = todayISO();
+  if (state.stats.reviewedDate !== today) {
+    state.stats.reviewedToday = 0;
+    state.stats.reviewedDate = today;
+  }
+  state.stats.reviewedToday += 1;
+
+  if (state.stats.lastReviewDate !== today) {
+    if (state.stats.lastReviewDate && daysDiffFromToday(state.stats.lastReviewDate) === -1) {
+      state.stats.streak = (state.stats.streak || 0) + 1;
+    } else {
+      state.stats.streak = 1;
+    }
+    state.stats.lastReviewDate = today;
+  }
+}
+
 function renderSrsCard() {
   const remaining = ui.srsQueue.length;
   document.getElementById('srs-remaining').textContent = String(remaining);
@@ -646,6 +745,8 @@ function renderSrsCard() {
   if (remaining === 0) {
     stage.hidden = true;
     doneState.hidden = false;
+    document.getElementById('done-stat-today').textContent = String(state.stats.reviewedToday || 0);
+    document.getElementById('done-stat-streak').textContent = String(state.stats.streak || 0);
     return;
   }
 
@@ -678,6 +779,10 @@ function renderSrsCard() {
   document.getElementById('srs-good-interval').textContent = formatCzDays(nextDays);
 
   const flashcardEl = document.getElementById('flashcard');
+  flashcardEl.style.transform = '';
+  flashcardEl.style.transition = '';
+  document.getElementById('swipe-left-badge').style.opacity = '0';
+  document.getElementById('swipe-right-badge').style.opacity = '0';
   flashcardEl.classList.toggle('flipped', ui.srsFlipped);
   document.getElementById('srs-reveal-wrap').hidden = ui.srsFlipped;
   document.getElementById('srs-rate-wrap').hidden = !ui.srsFlipped;
@@ -691,58 +796,118 @@ function flipFlashcard() {
   document.getElementById('srs-rate-wrap').hidden = false;
 }
 
-document.getElementById('flashcard').addEventListener('click', (e) => {
-  if (e.target.closest('#card-speak-btn')) return;
+function gradeCurrentCard(grade) {
+  const cardId = ui.srsQueue.shift();
+  const card = state.cards.find((c) => c.id === cardId);
+  if (!card) return;
+
+  if (grade === 'again') {
+    card.reps = 0;
+    card.interval = 0;
+    card.dueDate = todayISO();
+    const insertAt = Math.min(ui.srsQueue.length, 2);
+    ui.srsQueue.splice(insertAt, 0, card.id);
+  } else if (grade === 'hard') {
+    card.reps = Math.max(1, card.reps);
+    card.interval = 1;
+    card.dueDate = addDaysISO(1);
+    ui.srsDoneCount++;
+    recordReviewStat();
+  } else if (grade === 'good') {
+    const nextDays = getNextGoodInterval(card);
+    card.reps = (card.reps || 0) + 1;
+    card.interval = nextDays;
+    card.dueDate = addDaysISO(nextDays);
+    ui.srsDoneCount++;
+    recordReviewStat();
+  }
+
+  saveState();
+  ui.srsFlipped = false;
+  renderSrsCard();
+}
+
+const flashcardEl = document.getElementById('flashcard');
+
+flashcardEl.addEventListener('click', (e) => {
+  if (e.target.closest('.card-tool-btns')) return;
   if (!ui.srsFlipped) flipFlashcard();
 });
 
-document.getElementById('flashcard').addEventListener('keydown', (e) => {
+flashcardEl.addEventListener('keydown', (e) => {
   if ((e.key === 'Enter' || e.key === ' ') && !ui.srsFlipped) {
     e.preventDefault();
     flipFlashcard();
   }
 });
 
+// Touch Swipe Gestures on Flipped Card
+let touchStartX = 0;
+let touchStartY = 0;
+let swiping = false;
+
+flashcardEl.addEventListener('touchstart', (e) => {
+  if (!ui.srsFlipped || e.target.closest('.card-tool-btns')) return;
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  swiping = true;
+  flashcardEl.style.transition = 'none';
+}, { passive: true });
+
+flashcardEl.addEventListener('touchmove', (e) => {
+  if (!swiping || !ui.srsFlipped) return;
+  const t = e.touches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  if (Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 15) return;
+
+  flashcardEl.style.transform = `translateX(${dx}px) rotate(${dx * 0.04}deg)`;
+  const ratio = Math.min(1, Math.abs(dx) / 90);
+  document.getElementById('swipe-left-badge').style.opacity = dx < -15 ? String(ratio) : '0';
+  document.getElementById('swipe-right-badge').style.opacity = dx > 15 ? String(ratio) : '0';
+}, { passive: true });
+
+flashcardEl.addEventListener('touchend', (e) => {
+  if (!swiping || !ui.srsFlipped) return;
+  swiping = false;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+
+  if (dx > 85) {
+    gradeCurrentCard('good');
+  } else if (dx < -85) {
+    gradeCurrentCard('again');
+  } else {
+    flashcardEl.style.transition = 'transform 0.2s ease';
+    flashcardEl.style.transform = '';
+    document.getElementById('swipe-left-badge').style.opacity = '0';
+    document.getElementById('swipe-right-badge').style.opacity = '0';
+  }
+}, { passive: true });
+
 document.getElementById('srs-flip-btn').addEventListener('click', flipFlashcard);
 
 document.getElementById('card-speak-btn').addEventListener('click', (e) => {
   e.stopPropagation();
-  const cardId = ui.srsQueue[0];
-  const card = state.cards.find((c) => c.id === cardId);
-  if (card) speakEnglish(card.en, e.currentTarget);
+  const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
+  if (card) speakEnglish(card.en, e.currentTarget, 0.9);
+});
+
+document.getElementById('card-slow-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
+  if (card) speakEnglish(card.en, e.currentTarget, 0.62);
+});
+
+document.getElementById('card-show-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
+  if (card) openShowModal(card.en, card.cz);
 });
 
 document.querySelectorAll('.srs-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const grade = btn.dataset.grade;
-    const cardId = ui.srsQueue.shift();
-    const card = state.cards.find((c) => c.id === cardId);
-    if (!card) return;
-
-    if (grade === 'again') {
-      card.reps = 0;
-      card.interval = 0;
-      card.dueDate = todayISO();
-      // Re-insert into today's queue (a few cards later or at the end)
-      const insertAt = Math.min(ui.srsQueue.length, 2);
-      ui.srsQueue.splice(insertAt, 0, card.id);
-    } else if (grade === 'hard') {
-      card.reps = Math.max(1, card.reps);
-      card.interval = 1;
-      card.dueDate = addDaysISO(1);
-      ui.srsDoneCount++;
-    } else if (grade === 'good') {
-      const nextDays = getNextGoodInterval(card);
-      card.reps = (card.reps || 0) + 1;
-      card.interval = nextDays;
-      card.dueDate = addDaysISO(nextDays);
-      ui.srsDoneCount++;
-    }
-
-    saveState();
-    ui.srsFlipped = false;
-    renderSrsCard();
-  });
+  btn.addEventListener('click', () => gradeCurrentCard(btn.dataset.grade));
 });
 
 document.getElementById('srs-practice-extra-btn').addEventListener('click', () => {
@@ -772,16 +937,53 @@ function populateTopicSelects() {
   const filterSel = document.getElementById('vocab-topic-filter');
   const addSel = document.getElementById('add-topic');
   const shareSel = document.getElementById('share-topic-select');
+  const editSel = document.getElementById('edit-topic');
 
   TOPICS.forEach((t) => {
-    const opt1 = new Option(`${t.icon} ${t.label}`, t.id);
-    const opt2 = new Option(`${t.icon} ${t.label}`, t.id);
-    const opt3 = new Option(`${t.icon} ${t.label}`, t.id);
-    filterSel.add(opt1);
-    addSel.add(opt2);
-    shareSel.add(opt3);
+    filterSel.add(new Option(`${t.icon} ${t.label}`, t.id));
+    addSel.add(new Option(`${t.icon} ${t.label}`, t.id));
+    shareSel.add(new Option(`${t.icon} ${t.label}`, t.id));
+    editSel.add(new Option(`${t.icon} ${t.label}`, t.id));
   });
 }
+
+function openEditModal(card) {
+  document.getElementById('edit-id').value = card.id;
+  document.getElementById('edit-topic').value = card.topic;
+  document.getElementById('edit-cz').value = card.cz;
+  document.getElementById('edit-en').value = card.en;
+  document.getElementById('edit-phonetic').value = card.phonetic || '';
+  document.getElementById('edit-modal').hidden = false;
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').hidden = true;
+}
+
+document.getElementById('edit-modal-close').addEventListener('click', closeEditModal);
+document.getElementById('edit-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'edit-modal') closeEditModal();
+});
+
+document.getElementById('edit-phrase-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-id').value;
+  const card = state.cards.find((c) => c.id === id);
+  if (!card) return;
+
+  card.topic = document.getElementById('edit-topic').value;
+  card.cz = document.getElementById('edit-cz').value.trim();
+  card.en = document.getElementById('edit-en').value.trim();
+  let ph = document.getElementById('edit-phonetic').value.trim();
+  if (ph && !ph.startsWith('[')) ph = `[${ph}]`;
+  card.phonetic = ph;
+
+  saveState();
+  closeEditModal();
+  renderVocabList();
+  renderShareChecklist();
+  showToast('Věta upravena!');
+});
 
 function renderVocabList() {
   const query = document.getElementById('vocab-search').value.trim().toLowerCase();
@@ -819,7 +1021,9 @@ function renderVocabList() {
       <div class="vocab-item-top">
         <span class="topic-tag">${topicMeta.icon} ${topicMeta.shortLabel}</span>
         <div class="vocab-item-actions">
+          <button type="button" class="mini-btn show-mini" title="Ukázat na displeji">📱</button>
           <button type="button" class="mini-btn speak-mini" title="Poslechnout">🔊</button>
+          <button type="button" class="mini-btn edit-mini" title="Upravit větu">✏️</button>
           <button type="button" class="mini-btn del" title="Smazat větu">✕</button>
         </div>
       </div>
@@ -837,9 +1041,11 @@ function renderVocabList() {
       el.querySelector('.phonetic-text').textContent = card.phonetic;
     }
 
+    el.querySelector('.show-mini').addEventListener('click', () => openShowModal(card.en, card.cz));
     el.querySelector('.speak-mini').addEventListener('click', (e) => {
-      speakEnglish(card.en, e.currentTarget);
+      speakEnglish(card.en, e.currentTarget, 0.9);
     });
+    el.querySelector('.edit-mini').addEventListener('click', () => openEditModal(card));
     el.querySelector('.del').addEventListener('click', () => {
       state.cards = state.cards.filter((c) => c.id !== card.id);
       ui.shareSelectedIds.delete(card.id);
@@ -894,7 +1100,6 @@ function renderShareChecklist() {
   const container = document.getElementById('share-checklist');
   container.innerHTML = '';
 
-  // Initialize selection if empty
   if (ui.shareSelectedIds.size === 0 && cards.length > 0) {
     cards.slice(0, 10).forEach((c) => ui.shareSelectedIds.add(c.id));
   }
@@ -974,8 +1179,7 @@ document.getElementById('copy-code-btn').addEventListener('click', () => {
 });
 
 document.getElementById('copy-link-btn').addEventListener('click', () => {
-  const url = getShareUrl();
-  copyText(url, 'Odkaz zkopírován!');
+  copyText(getShareUrl(), 'Odkaz zkopírován!');
 });
 
 document.getElementById('share-whatsapp-btn').addEventListener('click', () => {
@@ -1056,7 +1260,11 @@ document.getElementById('backup-restore-input').addEventListener('change', (e) =
         throw new Error('Neplatný soubor');
       }
       state = parsed;
+      if (!state.stats) {
+        state.stats = { streak: 0, lastReviewDate: null, reviewedToday: 0, reviewedDate: todayISO() };
+      }
       saveState();
+      applyTheme(state.theme || 'light');
       renderVocabList();
       renderShareChecklist();
       showToast(`Obnoveno ${state.cards.length} karet ze zálohy!`);
@@ -1087,6 +1295,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // --- Init App ---
+applyTheme(state.theme);
 populateTopicSelects();
 renderBuilderTopics();
 renderTemplate();
