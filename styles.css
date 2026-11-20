@@ -2764,3 +2764,23 @@ textarea:focus {
 .lt-result-body h2 {
   margin: 4px 0 8px;
 }
+
+/* Language Switcher Pill in Header */
+.lang-select {
+  border: 2px solid var(--duo-blue);
+  border-bottom: 4px solid var(--duo-blue-edge);
+  background: var(--duo-blue-soft);
+  color: var(--duo-blue-text);
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+  outline: none;
+}
+
+.lang-select:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}

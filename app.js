@@ -1,7 +1,55 @@
 import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES, TOPIC_ILLUSTRATIONS, VOCABULARY } from './data.js';
-import { VOCAB_PACKS, TOTAL_VOCAB_COUNT } from './vocab-bank.js';
+import { VOCAB_PACKS } from './vocab-bank.js';
+import { DE_PHRASES, DE_TEMPLATES, DE_VOCAB_PACKS, DE_VOCABULARY } from './lang-de.js';
+import { ES_PHRASES, ES_TEMPLATES, ES_VOCAB_PACKS, ES_VOCABULARY } from './lang-es.js';
 
-const STORAGE_KEY = 'ticha_anglictina_v1';
+const ACTIVE_LANG_KEY = 'ticha_lang_active';
+
+const LANGUAGES = {
+  en: {
+    code: 'en',
+    label: 'Angličtina',
+    upper: 'ANGLICKY',
+    speechLang: 'en-US',
+    voicePrefix: 'en',
+    storageKey: 'ticha_anglictina_v1',
+    phrases: INITIAL_PHRASES,
+    templates: SENTENCE_TEMPLATES,
+    packs: VOCAB_PACKS,
+    vocabulary: VOCABULARY
+  },
+  de: {
+    code: 'de',
+    label: 'Němčina',
+    upper: 'NĚMECKY',
+    speechLang: 'de-DE',
+    voicePrefix: 'de',
+    storageKey: 'ticha_anglictina_v1_de',
+    phrases: DE_PHRASES,
+    templates: DE_TEMPLATES,
+    packs: DE_VOCAB_PACKS,
+    vocabulary: DE_VOCABULARY
+  },
+  es: {
+    code: 'es',
+    label: 'Španělština',
+    upper: 'ŠPANĚLSKY',
+    speechLang: 'es-ES',
+    voicePrefix: 'es',
+    storageKey: 'ticha_anglictina_v1_es',
+    phrases: ES_PHRASES,
+    templates: ES_TEMPLATES,
+    packs: ES_VOCAB_PACKS,
+    vocabulary: ES_VOCABULARY
+  }
+};
+
+let activeLangCode = localStorage.getItem(ACTIVE_LANG_KEY) || 'en';
+if (!LANGUAGES[activeLangCode]) activeLangCode = 'en';
+
+function getLang() {
+  return LANGUAGES[activeLangCode] || LANGUAGES.en;
+}
 
 // --- Date Helpers ---
 function todayISO() {
@@ -98,12 +146,13 @@ function decodePack(rawInput) {
     }));
 }
 
-// --- Storage ---
+// --- Storage (samostatný postup pro každý jazyk EN / DE / ES) ---
 function createInitialState() {
   const today = todayISO();
+  const lang = getLang();
   return {
     theme: window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
-    tutorialSeen: false,
+    tutorialSeen: activeLangCode !== 'en',
     stats: {
       xp: 0,
       streak: 0,
@@ -117,7 +166,7 @@ function createInitialState() {
       reviewedToday: 0,
       reviewedDate: today
     },
-    cards: INITIAL_PHRASES.map((p) => ({
+    cards: lang.phrases.map((p) => ({
       ...p,
       interval: 0,
       reps: 0,
@@ -127,50 +176,42 @@ function createInitialState() {
 }
 
 function loadState() {
+  const lang = getLang();
+  const key = lang.storageKey;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) {
       const init = createInitialState();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(init));
+      localStorage.setItem(key, JSON.stringify(init));
       return init;
     }
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.cards)) {
       const init = createInitialState();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(init));
+      localStorage.setItem(key, JSON.stringify(init));
       return init;
     }
     if (!parsed.stats) {
-      parsed.stats = { xp: 0, streak: 0, lastReviewDate: null, reviewedToday: 0, reviewedDate: todayISO() };
+      parsed.stats = { xp: 0, streak: 0, dailyGoal: 10, unlockedLevel: 0, totalGood: 0, totalHard: 0, totalAgain: 0, testsPassed: 0, lastReviewDate: null, reviewedToday: 0, reviewedDate: todayISO() };
     }
-    if (typeof parsed.stats.xp !== 'number') {
-      parsed.stats.xp = 0;
-    }
-    if (typeof parsed.stats.dailyGoal !== 'number') {
-      parsed.stats.dailyGoal = 10;
-    }
-    if (typeof parsed.stats.unlockedLevel !== 'number') {
-      parsed.stats.unlockedLevel = 0;
-    }
+    if (typeof parsed.stats.xp !== 'number') parsed.stats.xp = 0;
+    if (typeof parsed.stats.dailyGoal !== 'number') parsed.stats.dailyGoal = 10;
+    if (typeof parsed.stats.unlockedLevel !== 'number') parsed.stats.unlockedLevel = 0;
     if (typeof parsed.stats.totalGood !== 'number') parsed.stats.totalGood = 0;
     if (typeof parsed.stats.totalHard !== 'number') parsed.stats.totalHard = 0;
     if (typeof parsed.stats.totalAgain !== 'number') parsed.stats.totalAgain = 0;
     if (typeof parsed.stats.testsPassed !== 'number') parsed.stats.testsPassed = 0;
-    if (!parsed.theme) {
-      parsed.theme = 'light';
-    }
-    // Reset today's counter if date changed
+    if (!parsed.theme) parsed.theme = 'light';
+
     if (parsed.stats.reviewedDate !== todayISO()) {
       parsed.stats.reviewedToday = 0;
       parsed.stats.reviewedDate = todayISO();
     }
-    // Check if streak expired (more than 1 day gap)
     if (parsed.stats.lastReviewDate && daysDiffFromToday(parsed.stats.lastReviewDate) < -1) {
       parsed.stats.streak = 0;
     }
 
-    // Aktualizace fonetického přepisu na čistou češtinu + doplnění tipů a nových extra frází
-    const initMap = new Map(INITIAL_PHRASES.map((p) => [p.id, p]));
+    const initMap = new Map(lang.phrases.map((p) => [p.id, p]));
     const existingIds = new Set(parsed.cards.map((c) => c.id));
     let migrated = false;
     parsed.cards.forEach((c) => {
@@ -189,21 +230,15 @@ function loadState() {
         migrated = true;
       }
     });
-    // Přidání nových rozšiřujících frází (ext-*), pokud je uživatel ještě nemá
     const today = todayISO();
-    INITIAL_PHRASES.forEach((p) => {
+    lang.phrases.forEach((p) => {
       if (p.id.startsWith('ext-') && !existingIds.has(p.id)) {
-        parsed.cards.push({
-          ...p,
-          interval: 0,
-          reps: 0,
-          dueDate: today
-        });
+        parsed.cards.push({ ...p, interval: 0, reps: 0, dueDate: today });
         migrated = true;
       }
     });
     if (migrated) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      localStorage.setItem(key, JSON.stringify(parsed));
     }
     return parsed;
   } catch {
@@ -212,7 +247,7 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(getLang().storageKey, JSON.stringify(state));
   updateDueIndicators();
 }
 
@@ -269,19 +304,20 @@ function speakEnglish(text, btnEl, rate = 0.9) {
       synth.resume();
     }
 
+    const langCfg = getLang();
     const utter = new SpeechSynthesisUtterance(text);
     activeUtterance = utter;
-    utter.lang = 'en-US';
+    utter.lang = langCfg.speechLang;
     utter.rate = rate;
     utter.pitch = 1.0;
     utter.volume = 1.0;
 
     const voices = cachedVoices.length ? cachedVoices : synth.getVoices();
-    const enVoice =
-      voices.find((v) => v.lang === 'en-US') ||
-      voices.find((v) => v.lang === 'en-GB') ||
-      voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en'));
-    if (enVoice) utter.voice = enVoice;
+    const pref = langCfg.voicePrefix;
+    const matchVoice =
+      voices.find((v) => v.lang === langCfg.speechLang) ||
+      voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(pref));
+    if (matchVoice) utter.voice = matchVoice;
 
     clearTimeout(speakTimer);
     if (btnEl) {
@@ -455,8 +491,9 @@ function setBuilderMode(mode) {
 }
 
 function getFilteredTemplates() {
-  if (ui.builderTopic === 'all') return SENTENCE_TEMPLATES;
-  return SENTENCE_TEMPLATES.filter((t) => t.topic === ui.builderTopic);
+  const tpls = getLang().templates;
+  if (ui.builderTopic === 'all') return tpls;
+  return tpls.filter((t) => t.topic === ui.builderTopic);
 }
 
 function buildTemplateResult(tpl) {
@@ -928,6 +965,8 @@ function renderSrsCard() {
       cardIll.innerHTML = TOPIC_ILLUSTRATIONS[card.topic] || TOPIC_ILLUSTRATIONS.camping;
     }
   }
+  const langBackHint = document.getElementById('card-lang-back-hint');
+  if (langBackHint) langBackHint.textContent = getLang().upper;
   document.getElementById('card-en').textContent = card.en;
   document.getElementById('card-phonetic').textContent = card.phonetic || '';
   document.getElementById('card-cz-back').textContent = card.cz;
@@ -1140,7 +1179,7 @@ let dictLimit = 50;
 function getFilteredDictWords() {
   const q = (document.getElementById('dict-search')?.value || '').trim().toLowerCase();
   const topicFilter = document.getElementById('dict-topic-filter')?.value || 'all';
-  return VOCABULARY.filter((w) => {
+  return getLang().vocabulary.filter((w) => {
     if (topicFilter !== 'all' && w.topic !== topicFilter) return false;
     if (!q) return true;
     return (
@@ -1158,8 +1197,9 @@ function renderDictList(resetLimit = false) {
   const moreBtn = document.getElementById('dict-load-more-btn');
   if (!listEl) return;
 
+  const totalVoc = getLang().vocabulary.length;
   const filtered = getFilteredDictWords();
-  countEl.textContent = `${filtered.length.toLocaleString('cs-CZ')} z ${VOCABULARY.length.toLocaleString('cs-CZ')} slov`;
+  countEl.textContent = `${filtered.length.toLocaleString('cs-CZ')} z ${totalVoc.toLocaleString('cs-CZ')} slov`;
 
   const slice = filtered.slice(0, dictLimit);
   const existingSet = new Set(state.cards.map((c) => c.en.toLowerCase()));
@@ -1754,14 +1794,17 @@ function createWordPicCard(w, topicId, existingSet) {
 }
 
 function renderVocabPacks() {
+  const lang = getLang();
+  const packs = lang.packs;
+  const totalCount = packs.reduce((sum, p) => sum + p.words.length, 0);
   const heading = document.getElementById('vocab-packs-heading');
-  if (heading) heading.textContent = `🖼️ Slovník ${TOTAL_VOCAB_COUNT.toLocaleString('cs-CZ')} nejpoužívanějších slovíček`;
+  if (heading) heading.textContent = `🖼️ Slovník ${lang.label} (${totalCount.toLocaleString('cs-CZ')} slovíček)`;
 
   const container = document.getElementById('vocab-packs-container');
   container.innerHTML = '';
   const existingSet = new Set(state.cards.map((c) => c.en.toLowerCase()));
 
-  VOCAB_PACKS.forEach((pack) => {
+  packs.forEach((pack) => {
     const addedCount = pack.words.filter((w) => existingSet.has(w.en.toLowerCase())).length;
     const details = document.createElement('details');
     details.className = 'pack-card';
@@ -1849,7 +1892,7 @@ document.getElementById('bank-search').addEventListener('input', (e) => {
 
   const existingSet = new Set(state.cards.map((c) => c.en.toLowerCase()));
   const matches = [];
-  for (const pack of VOCAB_PACKS) {
+  for (const pack of getLang().packs) {
     for (const w of pack.words) {
       if (w.en.toLowerCase().includes(q) || w.cz.toLowerCase().includes(q)) {
         matches.push({ w, topic: pack.topic });
@@ -1889,13 +1932,14 @@ function openLevelTest(targetLevelIdx) {
   levelTest.answered = false;
 
   // Vyber otázky z aktuálně odemčených témat (přednostně z posledního odemčeného tématu)
+  const langPhrases = getLang().phrases;
   const sourceTopicId = TOPICS[Math.max(0, levelTest.targetLevelIdx - 1)]?.id || 'general';
   let pool = state.cards.filter((c) => c.topic === sourceTopicId);
   if (pool.length < 5) {
-    pool = [...pool, ...INITIAL_PHRASES.filter((p) => p.topic === sourceTopicId)];
+    pool = [...pool, ...langPhrases.filter((p) => p.topic === sourceTopicId)];
   }
   if (pool.length < 5) {
-    pool = state.cards.length >= 5 ? state.cards : INITIAL_PHRASES;
+    pool = state.cards.length >= 5 ? state.cards : langPhrases;
   }
 
   const uniquePool = [];
@@ -1907,7 +1951,7 @@ function openLevelTest(targetLevelIdx) {
     }
   });
 
-  const allDistractors = INITIAL_PHRASES.concat(state.cards);
+  const allDistractors = langPhrases.concat(state.cards);
   levelTest.questions = uniquePool.slice(0, 5).map((q) => {
     const wrongs = [];
     const used = new Set([q.en.toLowerCase()]);
@@ -2118,7 +2162,52 @@ document.getElementById('guide-replay-tutorial').addEventListener('click', () =>
   openTutorialModal();
 });
 
+// ==========================================
+// PŘEPÍNAČ JAZYKŮ (🇬🇧 EN / 🇩🇪 DE / 🇪🇸 ES)
+// ==========================================
+function syncLangUI() {
+  const lang = getLang();
+  const sel = document.getElementById('lang-select');
+  if (sel) sel.value = lang.code;
+  const dictBtn = document.getElementById('dict-subtab-btn');
+  if (dictBtn) dictBtn.textContent = `📖 ${lang.vocabulary.length} slov`;
+}
+
+document.getElementById('lang-select').addEventListener('change', (e) => {
+  const nextCode = e.target.value;
+  if (!LANGUAGES[nextCode] || nextCode === activeLangCode) return;
+  const prevTheme = state.theme;
+  activeLangCode = nextCode;
+  localStorage.setItem(ACTIVE_LANG_KEY, activeLangCode);
+  state = loadState();
+  state.theme = prevTheme;
+  saveState();
+
+  ui.tplIndex = 0;
+  ui.puzIndex = 0;
+  ui.tplSlots = {};
+  ui.tplCustomSlots = {};
+  ui.activeSlotIdx = null;
+  ui.shareSelectedIds.clear();
+
+  syncLangUI();
+  updateDueIndicators();
+  renderTemplate();
+  if (ui.activeTab === 'cards') initSrsSession();
+  else if (ui.activeTab === 'builder' && ui.builderMode === 'puzzle') setupPuzzle();
+  else if (ui.activeTab === 'journey') {
+    renderProgressMap();
+    renderVocabPacks();
+  } else if (ui.activeTab === 'vocab') {
+    renderVocabList();
+    renderDictList(true);
+    renderShareChecklist();
+  }
+  showToast(`Přepnuto na: ${getLang().label}`);
+});
+
 // --- Init App (Kartičky jako 1. výchozí záložka!) ---
+syncLangUI();
 applyTheme(state.theme);
 populateTopicSelects();
 renderBuilderTopics();

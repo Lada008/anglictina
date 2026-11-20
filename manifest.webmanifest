@@ -1,7 +1,7 @@
 {
-  "name": "Tichá Angličtina – Cestovatelský trénink",
-  "short_name": "Tichá Angličtina",
-  "description": "Tichý trénink cestovatelské angličtiny bez mikrofonu. Stavebnice vět, kartičky SRS a sdílení balíčků.",
+  "name": "Angličtina na cesty",
+  "short_name": "Angličtina na cesty",
+  "description": "Tichý offline trénink angličtiny, němčiny a španělštiny bez mikrofonu. Kartičky, stavebnice vět, mapa a slovíčka.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

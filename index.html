@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Tichá Angličtina – Cestovatelský trénink</title>
+  <title>Angličtina na cesty</title>
 
   <!-- PWA Manifest & Theme -->
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#0f766e" id="meta-theme-color" />
-  <meta name="description" content="Tichý trénink cestovatelské angličtiny bez mikrofonu. Stavebnice vět, kartičky a sdílení balíčků." />
+  <meta name="description" content="Tichý offline trénink angličtiny, němčiny a španělštiny bez mikrofonu. Kartičky, stavebnice vět, mapa a slovíčka." />
 
   <!-- iOS Safari PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Tichá Angličtina" />
+  <meta name="apple-mobile-web-app-title" content="Angličtina na cesty" />
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
@@ -26,13 +26,18 @@
     <!-- Top Header -->
     <header class="app-header">
       <div class="header-brand">
-        <span class="brand-badge" aria-hidden="true">🤫</span>
+        <span class="brand-badge" aria-hidden="true">🧳</span>
         <div>
-          <h1 class="app-title">Tichá Angličtina</h1>
-          <p class="app-subtitle" id="header-subtitle">Cestovatelský trénink bez mikrofonu</p>
+          <h1 class="app-title">Angličtina na cesty</h1>
+          <p class="app-subtitle" id="header-subtitle">Tichý trénink EN · DE · ES bez mikrofonu</p>
         </div>
       </div>
       <div class="header-actions">
+        <select id="lang-select" class="lang-select" aria-label="Vybrat jazyk">
+          <option value="en">🇬🇧 EN</option>
+          <option value="de">🇩🇪 DE</option>
+          <option value="es">🇪🇸 ES</option>
+        </select>
         <div class="streak-pill" id="header-streak-pill" title="Denní série opakování">
           🔥 <span id="header-streak-count">0</span>
         </div>
@@ -221,7 +226,7 @@
                   </div>
                 </div>
                 <div class="card-face-body">
-                  <div class="card-lang-hint">ANGLICKY</div>
+                  <div class="card-lang-hint" id="card-lang-back-hint">ANGLICKY</div>
                   <div class="card-main-text en-highlight" id="card-en"></div>
                   <div class="phonetic-text card-phonetic" id="card-phonetic"></div>
                   <div class="card-cz-reminder" id="card-cz-back"></div>
@@ -341,7 +346,7 @@
         <!-- Sub-navigation pills inside Tab 4 -->
         <div class="segmented-control" role="tablist">
           <button type="button" class="seg-btn active" data-vtab="list">📚 Moje</button>
-          <button type="button" class="seg-btn" data-vtab="dict">📖 2 000 slov</button>
+          <button type="button" class="seg-btn" data-vtab="dict" id="dict-subtab-btn">📖 Slovník</button>
           <button type="button" class="seg-btn" data-vtab="add">➕ Přidat</button>
           <button type="button" class="seg-btn" data-vtab="share">📤 Sdílet</button>
         </div>
@@ -594,8 +599,8 @@
       <div class="tut-step" data-step="0">
         <div class="mode-modal-head">
           <div class="done-emoji">🤫</div>
-          <h2>Vítej v Tiché Angličtině!</h2>
-          <p class="muted-text">100 % offline trénink angličtiny bez mikrofonu. Vyber si svůj denní cíl učení:</p>
+          <h2>Vítej v Angličtině na cesty!</h2>
+          <p class="muted-text">100 % offline trénink angličtiny, němčiny i španělštiny bez mikrofonu. Vyber si svůj denní cíl:</p>
         </div>
         <div class="goal-choice-grid" id="tut-goal-choices">
           <button type="button" class="goal-choice-btn" data-goal="5">
