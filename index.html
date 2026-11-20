@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Tichá Angličtina – Cestovatelský trénink</title>
+
+  <!-- PWA Manifest & Theme -->
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="description" content="Tichý trénink cestovatelské angličtiny bez mikrofonu. Stavebnice vět, kartičky a sdílení balíčků." />
+
+  <!-- iOS Safari PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tichá Angličtina" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <span class="brand-badge" aria-hidden="true">🤫</span>
+        <div>
+          <h1 class="app-title">Tichá Angličtina</h1>
+          <p class="app-subtitle" id="header-subtitle">Cestovatelský trénink bez mikrofonu</p>
+        </div>
+      </div>
+      <div class="header-pill" id="header-due-pill" title="Karty k dnešnímu opakování">
+        <span class="dot"></span>
+        <span id="header-due-count">0</span> dnes
+      </div>
+    </header>
+
+    <!-- Main Content Views -->
+    <main class="app-main">
+      <!-- 1. TAB: STAVEBNICE -->
+      <section id="view-builder" class="view active" aria-label="Stavebnice">
+        <!-- Topic Filter -->
+        <div class="topic-scroll" id="builder-topics" role="tablist" aria-label="Témata"></div>
+
+        <!-- Mode Switcher -->
+        <div class="segmented-control" role="tablist" aria-label="Režim stavebnice">
+          <button type="button" class="seg-btn active" data-mode="templates" id="btn-mode-templates">
+            🧩 Šablony
+          </button>
+          <button type="button" class="seg-btn" data-mode="puzzle" id="btn-mode-puzzle">
+            🧱 Skládačka
+          </button>
+        </div>
+
+        <!-- Mode A: Šablony -->
+        <div id="builder-templates-panel" class="builder-panel">
+          <div class="panel-meta">
+            <span class="topic-tag" id="tpl-topic-badge"></span>
+            <span class="counter-text" id="tpl-counter">1 / 1</span>
+          </div>
+
+          <article class="card template-card">
+            <div class="template-card-top">
+              <span class="hint-label">Klikni na zvýrazněnou část a změň variantu</span>
+              <button type="button" class="icon-btn speak-btn" id="tpl-speak-btn" aria-label="Přehrát výslovnost" title="Poslechnout výslovnost">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+              </button>
+            </div>
+
+            <div class="template-sentence" id="tpl-en-container"></div>
+
+            <div class="slot-picker" id="tpl-slot-picker" hidden>
+              <div class="slot-picker-title">Vyber variantu:</div>
+              <div class="slot-options" id="tpl-slot-options"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="translation-block">
+              <div class="cz-text" id="tpl-cz-text"></div>
+              <div class="phonetic-text" id="tpl-phonetic-text"></div>
+            </div>
+          </article>
+
+          <div class="action-row">
+            <button type="button" class="btn btn-secondary" id="tpl-prev-btn">← Předchozí</button>
+            <button type="button" class="btn btn-primary" id="tpl-save-btn">
+              <span>+ Přidat do kartiček</span>
+            </button>
+            <button type="button" class="btn btn-secondary" id="tpl-next-btn">Další →</button>
+          </div>
+        </div>
+
+        <!-- Mode B: Skládačka -->
+        <div id="builder-puzzle-panel" class="builder-panel" hidden>
+          <div class="panel-meta">
+            <span class="topic-tag" id="puz-topic-badge"></span>
+            <span class="counter-text" id="puz-counter">1 / 1</span>
+          </div>
+
+          <article class="card puzzle-card">
+            <div class="puzzle-prompt-label">Sestav anglickou větu:</div>
+            <div class="puzzle-cz" id="puz-cz-text"></div>
+
+            <div class="puzzle-phonetic-row">
+              <button type="button" class="text-link-btn" id="puz-hint-toggle">Ukázat fonetický přepis</button>
+              <div class="phonetic-text" id="puz-phonetic-text" hidden></div>
+            </div>
+
+            <div class="puzzle-answer-zone" id="puz-answer-zone" aria-live="polite">
+              <span class="placeholder-text">Klikej na slova níže ve správném pořadí…</span>
+            </div>
+
+            <div class="puzzle-feedback" id="puz-feedback" aria-live="polite"></div>
+
+            <div class="puzzle-bank" id="puz-bank"></div>
+          </article>
+
+          <div class="action-row">
+            <button type="button" class="btn btn-secondary" id="puz-reset-btn">↺ Znovu</button>
+            <button type="button" class="btn btn-secondary" id="puz-speak-btn" aria-label="Přehrát větu">🔊 Poslech</button>
+            <button type="button" class="btn btn-primary" id="puz-next-btn">Další věta →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. TAB: KARTIČKY (SRS) -->
+      <section id="view-cards" class="view" aria-label="Kartičky" hidden>
+        <div class="srs-top-bar">
+          <div class="srs-stats">
+            <span class="srs-due-label">Zbývá pro dnešek: <strong id="srs-remaining">0</strong></span>
+            <span class="srs-total-label" id="srs-total-cards">Celkem 30 karet</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="srs-progress-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Flashcard Stage -->
+        <div id="srs-stage" class="srs-stage">
+          <div class="flashcard-wrapper" id="flashcard" tabindex="0" role="button" aria-label="Klepnutím otočíš kartičku">
+            <div class="flashcard-inner">
+              <!-- Front: Czech -->
+              <div class="flashcard-face flashcard-front">
+                <div class="card-face-header">
+                  <span class="topic-tag" id="card-topic-front"></span>
+                  <span class="card-status-badge" id="card-status-badge">Nová</span>
+                </div>
+                <div class="card-face-body">
+                  <div class="card-lang-hint">ČESKY</div>
+                  <div class="card-main-text" id="card-cz"></div>
+                </div>
+                <div class="card-face-footer">
+                  <span class="tap-hint">Klepni pro otočení</span>
+                </div>
+              </div>
+
+              <!-- Back: English + Phonetic + Speaker -->
+              <div class="flashcard-face flashcard-back">
+                <div class="card-face-header">
+                  <span class="topic-tag" id="card-topic-back"></span>
+                  <button type="button" class="icon-btn speak-btn speak-btn-card" id="card-speak-btn" aria-label="Přehrát výslovnost" title="Poslechnout výslovnost">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                  </button>
+                </div>
+                <div class="card-face-body">
+                  <div class="card-lang-hint">ANGLICKY</div>
+                  <div class="card-main-text en-highlight" id="card-en"></div>
+                  <div class="phonetic-text card-phonetic" id="card-phonetic"></div>
+                  <div class="card-cz-reminder" id="card-cz-back"></div>
+                </div>
+                <div class="card-face-footer">
+                  <span class="tap-hint">Vyber, jak ti věta šla</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pre-flip prompt -->
+          <div id="srs-reveal-wrap" class="srs-reveal-wrap">
+            <button type="button" class="btn btn-primary btn-full" id="srs-flip-btn">Ukázat odpověď</button>
+          </div>
+
+          <!-- Post-flip 3 SRS buttons -->
+          <div id="srs-rate-wrap" class="srs-rate-wrap" hidden>
+            <button type="button" class="srs-btn srs-again" data-grade="again">
+              <span class="srs-btn-title">Znovu</span>
+              <span class="srs-btn-sub">ještě dnes</span>
+            </button>
+            <button type="button" class="srs-btn srs-hard" data-grade="hard">
+              <span class="srs-btn-title">Těžké</span>
+              <span class="srs-btn-sub">zítra</span>
+            </button>
+            <button type="button" class="srs-btn srs-good" data-grade="good">
+              <span class="srs-btn-title">Umím</span>
+              <span class="srs-btn-sub" id="srs-good-interval">za 3 dny</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Done for today state -->
+        <div id="srs-done-state" class="card done-card" hidden>
+          <div class="done-emoji">🎉</div>
+          <h2>Pro dnešek hotovo!</h2>
+          <p>Všechny dnešní kartičky máš zopakované. Můžeš si přidat nové věty ze Stavebnice nebo procvičit další karty navíc.</p>
+          <div class="done-actions">
+            <button type="button" class="btn btn-primary btn-full" id="srs-practice-extra-btn">Procvičit karty navíc</button>
+            <button type="button" class="btn btn-secondary btn-full" id="srs-go-builder-btn">Přejít do Stavebnice</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. TAB: SLOVÍČKA A SDÍLENÍ -->
+      <section id="view-vocab" class="view" aria-label="Slovíčka a sdílení" hidden>
+        <!-- Sub-navigation pills inside Tab 3 -->
+        <div class="segmented-control" role="tablist">
+          <button type="button" class="seg-btn active" data-vtab="list">📚 Přehled</button>
+          <button type="button" class="seg-btn" data-vtab="add">➕ Přidat</button>
+          <button type="button" class="seg-btn" data-vtab="share">📤 Sdílet &amp; Záloha</button>
+        </div>
+
+        <!-- Sub-view 1: List & Search -->
+        <div id="vtab-list" class="vtab-panel">
+          <div class="search-box">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="search" id="vocab-search" placeholder="Hledat česky, anglicky nebo téma…" autocomplete="off" />
+          </div>
+          <div class="vocab-count-row">
+            <span id="vocab-count-label">30 frází</span>
+            <select id="vocab-topic-filter" class="compact-select" aria-label="Filtrovat podle tématu">
+              <option value="all">Všechna témata</option>
+            </select>
+          </div>
+          <div id="vocab-list" class="vocab-list"></div>
+        </div>
+
+        <!-- Sub-view 2: Add New Phrase -->
+        <div id="vtab-add" class="vtab-panel" hidden>
+          <form id="add-phrase-form" class="card form-card">
+            <h2>Přidat vlastní větu</h2>
+            <div class="form-group">
+              <label for="add-topic">Téma</label>
+              <select id="add-topic" required></select>
+            </div>
+            <div class="form-group">
+              <label for="add-cz">Česká věta</label>
+              <input type="text" id="add-cz" placeholder="Např. Kde je nejbližší benzínka?" required />
+            </div>
+            <div class="form-group">
+              <label for="add-en">Anglická věta</label>
+              <input type="text" id="add-en" placeholder="Např. Where is the nearest petrol station?" required />
+            </div>
+            <div class="form-group">
+              <label for="add-phonetic">Český fonetický přepis (v závorce)</label>
+              <input type="text" id="add-phonetic" placeholder="Např. [wér iz ðə nírist petrol stejšn?]" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Uložit do kartiček</button>
+          </form>
+        </div>
+
+        <!-- Sub-view 3: Share Pack & Backup -->
+        <div id="vtab-share" class="vtab-panel" hidden>
+          <!-- Share Pack -->
+          <div class="card share-card">
+            <h2>Sdílet balíček (WhatsApp / kód)</h2>
+            <p class="muted-text">Vyber téma nebo vlastní věty a pošli balíček druhému uživateli jedním kliknutím.</p>
+
+            <div class="form-group">
+              <label for="share-topic-select">Co chceš sdílet?</label>
+              <select id="share-topic-select">
+                <option value="all">Všechny moje věty</option>
+              </select>
+            </div>
+
+            <div class="share-select-header">
+              <span id="share-selected-count">Vybráno: 0 vět</span>
+              <div class="inline-links">
+                <button type="button" class="text-link-btn" id="share-select-all">Vybrat vše</button>
+                <button type="button" class="text-link-btn" id="share-select-none">Zrušit</button>
+              </div>
+            </div>
+
+            <div id="share-checklist" class="share-checklist"></div>
+
+            <div class="share-output-group">
+              <label for="share-code-output">Kód balíčku (Base64)</label>
+              <textarea id="share-code-output" rows="2" readonly></textarea>
+              <div class="btn-grid-2">
+                <button type="button" class="btn btn-primary" id="copy-code-btn">📋 Kopírovat kód</button>
+                <button type="button" class="btn btn-secondary" id="copy-link-btn">🔗 Kopírovat odkaz</button>
+              </div>
+              <button type="button" class="btn btn-whatsapp btn-full" id="share-whatsapp-btn">
+                💬 Poslat přes WhatsApp
+              </button>
+            </div>
+          </div>
+
+          <!-- Import Pack -->
+          <div class="card share-card">
+            <h2>Načíst balíček</h2>
+            <p class="muted-text">Vlož kód balíčku nebo odkaz, který ti někdo poslal:</p>
+            <textarea id="import-code-input" rows="3" placeholder="Vlož sem kód balíčku nebo celý odkaz…"></textarea>
+            <button type="button" class="btn btn-primary btn-full" id="import-pack-btn">📥 Načíst věty do aplikace</button>
+          </div>
+
+          <!-- Backup & Restore -->
+          <div class="card share-card">
+            <h2>Záloha a obnova dat</h2>
+            <p class="muted-text">Veškerý pokrok se ukládá automaticky v telefonu. Zde si ho můžeš zazálohovat do souboru.</p>
+            <div class="btn-grid-2">
+              <button type="button" class="btn btn-secondary" id="backup-download-btn">💾 Stáhnout zálohu</button>
+              <label class="btn btn-secondary file-btn">
+                📂 Obnovit ze souboru
+                <input type="file" id="backup-restore-input" accept=".json,application/json" hidden />
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar (3 main tabs) -->
+    <nav class="bottom-nav" aria-label="Hlavní navigace">
+      <button type="button" class="nav-item active" data-tab="builder" id="nav-builder">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><path d="M14 17.5h7"></path><path d="M17.5 14v7"></path></svg>
+        <span>Stavebnice</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="cards" id="nav-cards">
+        <span class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2.5"></rect><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
+          <span class="nav-badge" id="nav-due-badge" hidden>0</span>
+        </span>
+        <span>Kartičky</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="vocab" id="nav-vocab">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <span>Slovíčka</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
