@@ -271,6 +271,22 @@ body {
   border-color: var(--primary);
 }
 
+.topic-illustration {
+  width: 112px;
+  height: 68px;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topic-illustration svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
 .template-sentence {
   font-size: 1.24rem;
   font-weight: 700;
@@ -595,7 +611,7 @@ body {
 .flashcard-inner {
   position: relative;
   width: 100%;
-  min-height: 300px;
+  min-height: 340px;
   transform-style: preserve-3d;
   transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
 }

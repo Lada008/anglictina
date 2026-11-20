@@ -1,4 +1,4 @@
-import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES } from './data.js';
+import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES, TOPIC_ILLUSTRATIONS } from './data.js';
 
 const STORAGE_KEY = 'ticha_anglictina_v1';
 
@@ -125,6 +125,21 @@ function loadState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(init));
       return init;
     }
+    // Aktualizace fonetického přepisu na čistou češtinu u výchozích frází
+    const initMap = new Map(INITIAL_PHRASES.map((p) => [p.id, p.phonetic]));
+    let migrated = false;
+    parsed.cards.forEach((c) => {
+      if (initMap.has(c.id) && c.phonetic !== initMap.get(c.id)) {
+        c.phonetic = initMap.get(c.id);
+        migrated = true;
+      } else if (c.phonetic && /[ðəθ]/.test(c.phonetic)) {
+        c.phonetic = c.phonetic.replace(/ðə/g, 'de').replace(/ð/g, 'd').replace(/ə/g, 'e').replace(/θ/g, 's');
+        migrated = true;
+      }
+    });
+    if (migrated) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
     return parsed;
   } catch {
     return createInitialState();
@@ -148,8 +163,11 @@ function showToast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
-// --- Speech Synthesis (iOS Safari safe) ---
+// --- Speech Synthesis (iOS Safari & Chrome safe) ---
 let cachedVoices = [];
+let activeUtterance = null;
+let speakTimer = null;
+
 if ('speechSynthesis' in window) {
   cachedVoices = window.speechSynthesis.getVoices();
   window.speechSynthesis.onvoiceschanged = () => {
@@ -162,28 +180,51 @@ function speakEnglish(text, btnEl) {
     showToast('Hlasové čtení není v tomto prohlížeči podporováno.');
     return;
   }
-  const synth = window.speechSynthesis;
-  synth.cancel();
+  try {
+    const synth = window.speechSynthesis;
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+    }
+    if (synth.paused) {
+      synth.resume();
+    }
 
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'en-US';
-  utter.rate = 0.92;
-  utter.pitch = 1.0;
+    const utter = new SpeechSynthesisUtterance(text);
+    activeUtterance = utter;
+    utter.lang = 'en-US';
+    utter.rate = 0.9;
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
 
-  const voices = cachedVoices.length ? cachedVoices : synth.getVoices();
-  const enVoice =
-    voices.find((v) => v.lang.startsWith('en-GB') && v.localService) ||
-    voices.find((v) => v.lang.startsWith('en-US') && v.localService) ||
-    voices.find((v) => v.lang.startsWith('en'));
-  if (enVoice) utter.voice = enVoice;
+    const voices = cachedVoices.length ? cachedVoices : synth.getVoices();
+    const enVoice =
+      voices.find((v) => v.lang === 'en-US') ||
+      voices.find((v) => v.lang === 'en-GB') ||
+      voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en'));
+    if (enVoice) utter.voice = enVoice;
 
-  if (btnEl) {
-    btnEl.classList.add('speaking');
-    utter.onend = () => btnEl.classList.remove('speaking');
-    utter.onerror = () => btnEl.classList.remove('speaking');
+    clearTimeout(speakTimer);
+    if (btnEl) {
+      btnEl.classList.add('speaking');
+    }
+    const cleanup = () => {
+      clearTimeout(speakTimer);
+      if (btnEl) btnEl.classList.remove('speaking');
+      if (activeUtterance === utter) activeUtterance = null;
+    };
+
+    utter.onend = cleanup;
+    utter.onerror = () => {
+      cleanup();
+      showToast('Zkontroluj, zda nemáš na telefonu zapnutý tichý režim.');
+    };
+    speakTimer = setTimeout(cleanup, 6000);
+
+    synth.speak(utter);
+  } catch {
+    if (btnEl) btnEl.classList.remove('speaking');
+    showToast('Poslech se nepodařilo spustit.');
   }
-
-  synth.speak(utter);
 }
 
 // --- App UI State ---
@@ -328,6 +369,8 @@ function renderTemplate() {
 
   document.getElementById('tpl-topic-badge').textContent = `${topicMeta.icon} ${topicMeta.label}`;
   document.getElementById('tpl-counter').textContent = `${ui.tplIndex + 1} / ${list.length}`;
+  const tplIll = document.getElementById('tpl-illustration');
+  if (tplIll) tplIll.innerHTML = TOPIC_ILLUSTRATIONS[tpl.topic] || TOPIC_ILLUSTRATIONS.camping;
 
   const enContainer = document.getElementById('tpl-en-container');
   enContainer.innerHTML = '';
@@ -625,6 +668,8 @@ function renderSrsCard() {
     card.reps === 0 ? 'Nová' : `Opakování (${card.reps}×)`;
 
   document.getElementById('card-cz').textContent = card.cz;
+  const cardIll = document.getElementById('card-illustration-front');
+  if (cardIll) cardIll.innerHTML = TOPIC_ILLUSTRATIONS[card.topic] || TOPIC_ILLUSTRATIONS.camping;
   document.getElementById('card-en').textContent = card.en;
   document.getElementById('card-phonetic').textContent = card.phonetic || '';
   document.getElementById('card-cz-back').textContent = card.cz;
