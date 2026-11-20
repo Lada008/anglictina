@@ -2,7 +2,6 @@ import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES, TOPIC_ILLUSTRATIONS, VOCAB
 import { VOCAB_PACKS, TOTAL_VOCAB_COUNT } from './vocab-bank.js';
 
 const STORAGE_KEY = 'ticha_anglictina_v1';
-const AI_KEY_STORAGE = 'ticha_anglictina_gemini_key';
 
 // --- Date Helpers ---
 function todayISO() {
@@ -104,11 +103,16 @@ function createInitialState() {
   const today = todayISO();
   return {
     theme: window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
-    aiEnabled: null,
+    tutorialSeen: false,
     stats: {
       xp: 0,
       streak: 0,
       dailyGoal: 10,
+      unlockedLevel: 0,
+      totalGood: 0,
+      totalHard: 0,
+      totalAgain: 0,
+      testsPassed: 0,
       lastReviewDate: null,
       reviewedToday: 0,
       reviewedDate: today
@@ -145,6 +149,13 @@ function loadState() {
     if (typeof parsed.stats.dailyGoal !== 'number') {
       parsed.stats.dailyGoal = 10;
     }
+    if (typeof parsed.stats.unlockedLevel !== 'number') {
+      parsed.stats.unlockedLevel = 0;
+    }
+    if (typeof parsed.stats.totalGood !== 'number') parsed.stats.totalGood = 0;
+    if (typeof parsed.stats.totalHard !== 'number') parsed.stats.totalHard = 0;
+    if (typeof parsed.stats.totalAgain !== 'number') parsed.stats.totalAgain = 0;
+    if (typeof parsed.stats.testsPassed !== 'number') parsed.stats.testsPassed = 0;
     if (!parsed.theme) {
       parsed.theme = 'light';
     }
@@ -342,7 +353,7 @@ document.getElementById('tip-modal').addEventListener('click', (e) => {
 
 // --- App UI State ---
 const ui = {
-  activeTab: 'builder',
+  activeTab: 'cards',
   builderTopic: 'all',
   builderMode: 'templates',
   tplIndex: 0,
@@ -378,7 +389,6 @@ function switchTab(tabName) {
   } else if (tabName === 'journey') {
     renderProgressMap();
     renderVocabPacks();
-    updateAiKeyUI();
   } else if (tabName === 'vocab') {
     renderVocabList();
     renderShareChecklist();
@@ -952,21 +962,24 @@ function gradeCurrentCard(grade) {
     card.reps = 0;
     card.interval = 0;
     card.dueDate = todayISO();
+    state.stats.totalAgain = (state.stats.totalAgain || 0) + 1;
     const insertAt = Math.min(ui.srsQueue.length, 2);
     ui.srsQueue.splice(insertAt, 0, card.id);
   } else if (grade === 'hard') {
     card.reps = Math.max(1, card.reps);
     card.interval = 1;
     card.dueDate = addDaysISO(1);
+    state.stats.totalHard = (state.stats.totalHard || 0) + 1;
     ui.srsDoneCount++;
-    recordReviewStat();
+    recordReviewStat(5);
   } else if (grade === 'good') {
     const nextDays = getNextGoodInterval(card);
     card.reps = (card.reps || 0) + 1;
     card.interval = nextDays;
     card.dueDate = addDaysISO(nextDays);
+    state.stats.totalGood = (state.stats.totalGood || 0) + 1;
     ui.srsDoneCount++;
-    recordReviewStat();
+    recordReviewStat(10);
   }
 
   saveState();
@@ -1592,19 +1605,8 @@ document.getElementById('guide-modal').addEventListener('click', (e) => {
 });
 
 // ==========================================
-// TAB 3: MAPA PROGRESU, OBRÁZKOVÁ SLOVÍČKA & AI
+// TAB 3: MAPA PROGRESU, STATISTIKA ÚSPĚCHU & ODEMYKÁNÍ
 // ==========================================
-document.querySelectorAll('[data-jtab]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const jtab = btn.dataset.jtab;
-    document.querySelectorAll('[data-jtab]').forEach((b) =>
-      b.classList.toggle('active', b.dataset.jtab === jtab)
-    );
-    document.getElementById('jtab-map').hidden = jtab !== 'map';
-    document.getElementById('jtab-ai').hidden = jtab !== 'ai';
-  });
-});
-
 function getLevelTitle(lvl) {
   if (lvl <= 1) return 'Začátečník';
   if (lvl === 2) return 'Cestovatel';
@@ -1618,11 +1620,39 @@ function renderProgressMap() {
   const level = Math.floor(xp / 100) + 1;
   const xpInLevel = xp % 100;
   const masteredTotal = state.cards.filter((c) => (c.reps || 0) >= 1).length;
+  const unlockedIdx = Math.min(TOPICS.length - 1, Math.max(0, state.stats?.unlockedLevel || 0));
 
   document.getElementById('xp-level-label').textContent = `Úroveň ${level} · ${getLevelTitle(level)}`;
-  document.getElementById('xp-sub-label').textContent = `${xp} XP · Procvičeno ${masteredTotal} z ${state.cards.length} karet`;
+  document.getElementById('xp-sub-label').textContent = `${xp} XP · Odemčeno ${unlockedIdx + 1} z ${TOPICS.length} témat`;
   document.getElementById('xp-badge').textContent = `${xp} XP`;
   document.getElementById('xp-progress-fill').style.width = `${Math.max(6, xpInLevel)}%`;
+
+  // Statistika úspěchu
+  const good = state.stats?.totalGood || 0;
+  const hard = state.stats?.totalHard || 0;
+  const again = state.stats?.totalAgain || 0;
+  const totalAns = good + hard + again;
+  const accuracyText = totalAns > 0 ? `${Math.round(((good + hard * 0.5) / totalAns) * 100)} %` : '—';
+
+  document.getElementById('stat-accuracy').textContent = accuracyText;
+  document.getElementById('stat-mastered').textContent = String(masteredTotal);
+  document.getElementById('stat-streak').textContent = String(state.stats?.streak || 0);
+  document.getElementById('stat-tests').textContent = String(state.stats?.testsPassed || 0);
+
+  // Banner pro postupový test
+  const nextTitle = document.getElementById('next-level-title');
+  const nextSub = document.getElementById('next-level-sub');
+  const testBtn = document.getElementById('start-level-test-btn');
+  if (unlockedIdx < TOPICS.length - 1) {
+    const nextTopic = TOPICS[unlockedIdx + 1];
+    nextTitle.textContent = `🏆 Test pro odemčení úrovně ${unlockedIdx + 2}: ${nextTopic.shortLabel}`;
+    nextSub.textContent = 'Odpověz správně alespoň na 4 z 5 otázek a odemkni další téma (+50 XP).';
+    testBtn.textContent = 'Spustit test';
+  } else {
+    nextTitle.textContent = `🎉 Všech ${TOPICS.length} úrovní máš odemčených!`;
+    nextSub.textContent = 'Chceš si prověřit znalosti ze všech témat najednou (+50 XP)?';
+    testBtn.textContent = 'Mistrovský test';
+  }
 
   const mapEl = document.getElementById('progress-map');
   mapEl.innerHTML = '';
@@ -1632,29 +1662,44 @@ function renderProgressMap() {
     const done = topicCards.filter((c) => (c.reps || 0) >= 1).length;
     const total = topicCards.length;
     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    const isMastered = total > 0 && done >= total;
+    const isUnlocked = idx <= unlockedIdx;
+    const isNextToUnlock = idx === unlockedIdx + 1;
+    const isMastered = isUnlocked && total > 0 && done >= total;
 
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `map-node ${isMastered ? 'mastered' : ''}`;
+    btn.className = `map-node ${isMastered ? 'mastered' : ''} ${!isUnlocked ? 'locked' : ''}`;
     btn.innerHTML = `
-      <div class="map-node-circle">${isMastered ? '✅' : topic.icon}</div>
+      <div class="map-node-circle">${!isUnlocked ? '🔒' : isMastered ? '✅' : topic.icon}</div>
       <div class="map-node-body">
         <div class="map-node-title">${idx + 1}. ${topic.label}</div>
-        <div class="map-node-sub">Zvládnuto ${done} / ${total} frází (${pct} %)</div>
-        <div class="map-mini-bar"><div class="map-mini-fill" style="width:${pct}%"></div></div>
+        <div class="map-node-sub">${
+          isUnlocked
+            ? `Zvládnuto ${done} / ${total} frází (${pct} %)`
+            : isNextToUnlock
+              ? 'Zamčeno · Splň postupový test (4/5)'
+              : 'Zamčeno · Nejdřív odemkni předchozí úroveň'
+        }</div>
+        <div class="map-mini-bar"><div class="map-mini-fill" style="width:${isUnlocked ? pct : 0}%"></div></div>
       </div>
-      <span class="map-node-go">Trénovat ›</span>
+      <span class="map-node-go">${isUnlocked ? 'Trénovat ›' : isNextToUnlock ? '🏆 Test ›' : '🔒'}</span>
     `;
     btn.addEventListener('click', () => {
-      ui.builderTopic = topic.id;
-      ui.tplIndex = 0;
-      ui.puzIndex = 0;
-      ui.tplSlots = {};
-      ui.activeSlotIdx = null;
-      renderBuilderTopics();
-      renderTemplate();
-      switchTab('builder');
+      if (isUnlocked) {
+        ui.builderTopic = topic.id;
+        ui.tplIndex = 0;
+        ui.puzIndex = 0;
+        ui.tplSlots = {};
+        ui.tplCustomSlots = {};
+        ui.activeSlotIdx = null;
+        renderBuilderTopics();
+        renderTemplate();
+        switchTab('builder');
+      } else if (isNextToUnlock) {
+        openLevelTest(idx);
+      } else {
+        showToast('Nejdřív odemkni předchozí úroveň pomocí testu 🏆');
+      }
     });
     mapEl.appendChild(btn);
   });
@@ -1824,267 +1869,192 @@ document.getElementById('bank-search').addEventListener('input', (e) => {
   resEl.appendChild(frag);
 });
 
-// --- AI Trenér (Google Gemini API, BYOK) ---
-function getAiKey() {
-  return (localStorage.getItem(AI_KEY_STORAGE) || '').trim();
-}
-
-function updateAiKeyUI() {
-  const key = getAiKey();
-  const statusEl = document.getElementById('ai-key-status');
-  const inputEl = document.getElementById('ai-api-key-input');
-  if (key) {
-    statusEl.textContent = 'Aktivní ✓';
-    statusEl.classList.add('ok');
-    if (inputEl && !inputEl.value) inputEl.value = key;
-  } else {
-    statusEl.textContent = 'Nenastaveno';
-    statusEl.classList.remove('ok');
-  }
-}
-
-document.getElementById('ai-save-key-btn').addEventListener('click', () => {
-  const val = document.getElementById('ai-api-key-input').value.trim();
-  if (!val) {
-    localStorage.removeItem(AI_KEY_STORAGE);
-    updateAiKeyUI();
-    showToast('API klíč byl odebrán.');
-    return;
-  }
-  localStorage.setItem(AI_KEY_STORAGE, val);
-  updateAiKeyUI();
-  document.getElementById('ai-key-details').open = false;
-  showToast('Gemini AI klíč uložen v telefonu!');
-});
-
-async function callGemini(promptText) {
-  const key = getAiKey();
-  if (!key) {
-    document.getElementById('ai-key-details').open = true;
-    throw new Error('Nejdřív vlož svůj bezplatný Google Gemini API klíč výše.');
-  }
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: promptText }] }]
-    })
-  });
-  if (!res.ok) {
-    throw new Error('Chyba spojení s Gemini AI. Zkontroluj svůj API klíč nebo připojení.');
-  }
-  const data = await res.json();
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-}
-
-document.querySelectorAll('.quick-chip[data-prompt]').forEach((chip) => {
-  chip.addEventListener('click', () => {
-    document.getElementById('ai-prompt-input').value = chip.dataset.prompt;
-    runAiGenerator();
-  });
-});
-
-async function runAiGenerator() {
-  const input = document.getElementById('ai-prompt-input');
-  const query = input.value.trim();
-  if (!query) {
-    showToast('Napiš, co chceš vygenerovat.');
-    return;
-  }
-  const btn = document.getElementById('ai-generate-btn');
-  const out = document.getElementById('ai-results');
-  btn.disabled = true;
-  btn.textContent = '⏳…';
-  out.innerHTML = '<div class="muted-text">AI připravuje fráze a výslovnost…</div>';
-
-  const sysPrompt = `Jsi přátelský učitel cestovatelské angličtiny pro Čechy.
-Uživatel chce: "${query}".
-Vrať POUZE čisté JSON pole objektů (bez markdownu a bez dalšího textu) s 3 až 8 položkami v tomto formátu:
-[{"en":"anglická věta nebo slovo","cz":"český překlad","phonetic":"[zjednodušený čistě český přepis BEZ znaků ð, ə, θ]","tip":"krátké české vysvětlení proč je věta takto poskládaná","img":"1 vhodné emoji"}]`;
-
-  try {
-    const raw = await callGemini(sysPrompt);
-    const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
-    const match = cleaned.match(/\[[\s\S]*\]/);
-    const items = JSON.parse(match ? match[0] : cleaned);
-    if (!Array.isArray(items) || !items.length) throw new Error('AI nevrátila žádná data.');
-
-    out.innerHTML = '';
-    items.forEach((it) => {
-      const card = document.createElement('div');
-      card.className = 'ai-result-item';
-      card.innerHTML = `
-        <div class="ai-result-top">
-          <div class="ai-result-en">${it.img || '✨'} ${it.en}</div>
-          <div class="vocab-item-actions">
-            <button type="button" class="mini-btn ai-spk">🔊</button>
-            <button type="button" class="mini-btn ai-add">+ Kartička</button>
-          </div>
-        </div>
-        <div class="ai-result-cz">${it.cz}</div>
-        <div class="phonetic-text">${it.phonetic || ''}</div>
-        <div class="ai-result-tip">💡 ${it.tip || ''}</div>
-      `;
-      card.querySelector('.ai-spk').addEventListener('click', (e) => speakEnglish(it.en, e.currentTarget, 0.9));
-      card.querySelector('.ai-add').addEventListener('click', (e) => {
-        if (addVocabWordToCards(it, 'problems')) {
-          saveState();
-          e.currentTarget.textContent = '✓ Přidáno';
-          e.currentTarget.disabled = true;
-          showToast('Přidáno do kartiček!');
-        } else {
-          showToast('Tato položka už v kartičkách je.');
-        }
-      });
-      out.appendChild(card);
-    });
-  } catch (err) {
-    out.innerHTML = `<div class="muted-text">${err.message || 'Nepodařilo se vygenerovat.'}</div>`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Vygenerovat';
-  }
-}
-
-document.getElementById('ai-generate-btn').addEventListener('click', runAiGenerator);
-
-// --- Tichý AI Roleplay ---
-const ROLEPLAY_SCENES = {
-  camping: {
-    label: 'Recepce kempu',
-    openerEn: 'Hello! Welcome to Sunny Beach Camping. How can I help you today?',
-    openerCz: 'Dobrý den! Vítejte v kempu Sunny Beach. Jak vám dnes mohu pomoci?'
-  },
-  restaurant: {
-    label: 'Restaurace',
-    openerEn: 'Good evening! Do you have a reservation, or would you like a table for two?',
-    openerCz: 'Dobrý večer! Máte rezervaci, nebo byste chtěli stůl pro dva?'
-  },
-  airport: {
-    label: 'Letiště',
-    openerEn: 'Hello! May I see your passport and boarding pass, please?',
-    openerCz: 'Dobrý den! Mohu prosím vidět váš pas a palubní lístek?'
-  },
-  pharmacy: {
-    label: 'Lékárna',
-    openerEn: 'Hello, how can I help you? Are you looking for something specific?',
-    openerCz: 'Dobrý den, jak vám mohu pomoci? Hledáte něco konkrétního?'
-  }
+// ==========================================
+// TEST PRO POSTUP NA DALŠÍ ÚROVEŇ (5 OTÁZEK)
+// ==========================================
+const levelTest = {
+  targetLevelIdx: 1,
+  questions: [],
+  current: 0,
+  score: 0,
+  answered: false
 };
 
-let roleplayHistory = [];
-let activeSceneKey = 'camping';
+function openLevelTest(targetLevelIdx) {
+  const unlockedIdx = Math.min(TOPICS.length - 1, Math.max(0, state.stats?.unlockedLevel || 0));
+  const isMastery = targetLevelIdx >= TOPICS.length;
+  levelTest.targetLevelIdx = isMastery ? TOPICS.length - 1 : targetLevelIdx;
+  levelTest.current = 0;
+  levelTest.score = 0;
+  levelTest.answered = false;
 
-function appendChatBubble(role, text, czTip) {
-  const chat = document.getElementById('roleplay-chat');
-  const ph = chat.querySelector('.chat-placeholder');
-  if (ph) ph.remove();
-
-  const div = document.createElement('div');
-  div.className = `chat-bubble ${role}`;
-  div.textContent = text;
-  if (czTip) {
-    const tip = document.createElement('div');
-    tip.className = 'chat-cz-tip';
-    tip.textContent = czTip;
-    div.appendChild(tip);
+  // Vyber otázky z aktuálně odemčených témat (přednostně z posledního odemčeného tématu)
+  const sourceTopicId = TOPICS[Math.max(0, levelTest.targetLevelIdx - 1)]?.id || 'general';
+  let pool = state.cards.filter((c) => c.topic === sourceTopicId);
+  if (pool.length < 5) {
+    pool = [...pool, ...INITIAL_PHRASES.filter((p) => p.topic === sourceTopicId)];
   }
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
+  if (pool.length < 5) {
+    pool = state.cards.length >= 5 ? state.cards : INITIAL_PHRASES;
+  }
 
-document.querySelectorAll('#roleplay-scenes .quick-chip').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    activeSceneKey = btn.dataset.scene;
-    const sc = ROLEPLAY_SCENES[activeSceneKey];
-    roleplayHistory = [{ role: 'AI', text: sc.openerEn }];
-    document.getElementById('roleplay-chat').innerHTML = '';
-    appendChatBubble('ai', sc.openerEn, `🇨🇿 ${sc.openerCz}`);
+  const uniquePool = [];
+  const seenEn = new Set();
+  shuffleArray(pool).forEach((item) => {
+    if (!seenEn.has(item.en.toLowerCase())) {
+      seenEn.add(item.en.toLowerCase());
+      uniquePool.push(item);
+    }
   });
-});
 
-async function sendRoleplayMessage() {
-  const input = document.getElementById('roleplay-input');
-  const userText = input.value.trim();
-  if (!userText) return;
-  input.value = '';
+  const allDistractors = INITIAL_PHRASES.concat(state.cards);
+  levelTest.questions = uniquePool.slice(0, 5).map((q) => {
+    const wrongs = [];
+    const used = new Set([q.en.toLowerCase()]);
+    for (const cand of shuffleArray(allDistractors)) {
+      const k = cand.en.toLowerCase();
+      if (!used.has(k)) {
+        used.add(k);
+        wrongs.push(cand.en);
+        if (wrongs.length === 3) break;
+      }
+    }
+    return {
+      cz: q.cz,
+      en: q.en,
+      options: shuffleArray([q.en, ...wrongs])
+    };
+  });
 
-  if (roleplayHistory.length === 0) {
-    const sc = ROLEPLAY_SCENES[activeSceneKey];
-    roleplayHistory = [{ role: 'AI', text: sc.openerEn }];
-  }
-
-  appendChatBubble('user', userText);
-  roleplayHistory.push({ role: 'User', text: userText });
-
-  const btn = document.getElementById('roleplay-send-btn');
-  btn.disabled = true;
-
-  const historyStr = roleplayHistory.slice(-6).map((m) => `${m.role}: ${m.text}`).join('\n');
-  const prompt = `Hraješ roli v cestovatelském dialogu (${ROLEPLAY_SCENES[activeSceneKey].label}).
-Dosavadní rozhovor:
-${historyStr}
-
-Odpověz POUZE jako čistý JSON objekt:
-{"replyEn":"krátká přirozená odpověď jednoduchou angličtinou (max 2 věty)","tipCz":"český překlad tvé odpovědi + případná jemná rada k uživatelově větě"}`;
-
-  try {
-    const raw = await callGemini(prompt);
-    const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    const obj = JSON.parse(match ? match[0] : cleaned);
-    roleplayHistory.push({ role: 'AI', text: obj.replyEn });
-    appendChatBubble('ai', obj.replyEn, `💡 ${obj.tipCz || ''}`);
-  } catch (err) {
-    appendChatBubble('ai', 'Nepodařilo se spojit s AI.', err.message || 'Zkontroluj API klíč.');
-  } finally {
-    btn.disabled = false;
-  }
+  const targetTopic = TOPICS[levelTest.targetLevelIdx];
+  document.getElementById('lt-title').textContent = isMastery
+    ? '🏆 Mistrovský test ze všech témat'
+    : `🏆 Test pro úroveň ${levelTest.targetLevelIdx + 1}: ${targetTopic.shortLabel}`;
+  document.getElementById('lt-quiz-body').hidden = false;
+  document.getElementById('lt-result-body').hidden = true;
+  document.getElementById('level-test-modal').hidden = false;
+  renderLevelTestQuestion();
 }
 
-document.getElementById('roleplay-send-btn').addEventListener('click', sendRoleplayMessage);
-document.getElementById('roleplay-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') sendRoleplayMessage();
-});
-
-// ==========================================
-// REŽIM APLIKACE (S AI / BEZ AI)
-// ==========================================
-function applyAiMode(enabled) {
-  const isAi = Boolean(enabled);
-  const subtabs = document.getElementById('journey-subtabs');
-  const navLabel = document.getElementById('nav-journey-label');
-  const classicBtn = document.getElementById('guide-mode-classic');
-  const aiBtn = document.getElementById('guide-mode-ai');
-
-  if (subtabs) subtabs.hidden = !isAi;
-  if (navLabel) navLabel.textContent = isAi ? 'Mapa & AI' : 'Mapa';
-
-  if (!isAi) {
-    document.getElementById('jtab-map').hidden = false;
-    document.getElementById('jtab-ai').hidden = true;
-    document.querySelectorAll('[data-jtab]').forEach((b) =>
-      b.classList.toggle('active', b.dataset.jtab === 'map')
-    );
+function renderLevelTestQuestion() {
+  const q = levelTest.questions[levelTest.current];
+  if (!q) {
+    finishLevelTest();
+    return;
   }
+  levelTest.answered = false;
+  const total = levelTest.questions.length;
+  document.getElementById('lt-q-counter').textContent = `Otázka ${levelTest.current + 1} / ${total}`;
+  document.getElementById('lt-score-live').textContent = `Správně: ${levelTest.score}`;
+  document.getElementById('lt-progress-fill').style.width = `${Math.round(((levelTest.current + 1) / total) * 100)}%`;
+  document.getElementById('lt-question-cz').textContent = q.cz;
 
-  if (classicBtn) classicBtn.classList.toggle('active-mode', !isAi);
-  if (aiBtn) aiBtn.classList.toggle('active-mode', isAi);
+  const fb = document.getElementById('lt-feedback');
+  fb.textContent = '';
+  fb.className = 'lt-feedback';
+  document.getElementById('lt-next-btn').hidden = true;
+
+  const optsEl = document.getElementById('lt-options');
+  optsEl.innerHTML = '';
+  q.options.forEach((optText) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lt-opt-btn';
+    btn.textContent = optText;
+    btn.addEventListener('click', () => handleLevelTestAnswer(optText, btn, q));
+    optsEl.appendChild(btn);
+  });
 }
 
-function selectAppMode(isAi, closeModals = true) {
-  state.aiEnabled = Boolean(isAi);
+function handleLevelTestAnswer(chosen, btnEl, q) {
+  if (levelTest.answered) return;
+  levelTest.answered = true;
+
+  const isCorrect = chosen === q.en;
+  const fb = document.getElementById('lt-feedback');
+  document.querySelectorAll('.lt-opt-btn').forEach((b) => {
+    b.disabled = true;
+    if (b.textContent === q.en) b.classList.add('correct');
+  });
+
+  if (isCorrect) {
+    levelTest.score++;
+    state.stats.totalGood = (state.stats.totalGood || 0) + 1;
+    fb.textContent = '✅ Správně!';
+    fb.className = 'lt-feedback ok';
+  } else {
+    btnEl.classList.add('wrong');
+    state.stats.totalAgain = (state.stats.totalAgain || 0) + 1;
+    fb.textContent = `✕ Správně je: ${q.en}`;
+    fb.className = 'lt-feedback err';
+  }
+  document.getElementById('lt-score-live').textContent = `Správně: ${levelTest.score}`;
+  const nextBtn = document.getElementById('lt-next-btn');
+  nextBtn.textContent =
+    levelTest.current + 1 < levelTest.questions.length ? 'Další otázka →' : 'Zobrazit výsledek 🏆';
+  nextBtn.hidden = false;
   saveState();
-  applyAiMode(state.aiEnabled);
-  if (closeModals) {
-    document.getElementById('mode-modal').hidden = true;
-  }
-  showToast(isAi ? 'Přepnuto na verzi s AI Trenérem 🤖' : 'Přepnuto na klasickou offline verzi 🌿');
 }
 
+function finishLevelTest() {
+  const total = levelTest.questions.length;
+  const passed = levelTest.score >= Math.ceil(total * 0.8);
+
+  document.getElementById('lt-quiz-body').hidden = true;
+  document.getElementById('lt-result-body').hidden = false;
+
+  if (passed) {
+    const wasLocked = (state.stats.unlockedLevel || 0) < levelTest.targetLevelIdx;
+    if (wasLocked) {
+      state.stats.unlockedLevel = levelTest.targetLevelIdx;
+    }
+    state.stats.xp = (state.stats.xp || 0) + 50;
+    state.stats.testsPassed = (state.stats.testsPassed || 0) + 1;
+    saveState();
+    renderProgressMap();
+
+    document.getElementById('lt-res-emoji').textContent = '🏆';
+    document.getElementById('lt-res-title').textContent = wasLocked
+      ? `Úroveň ${levelTest.targetLevelIdx + 1} odemčena!`
+      : 'Test úspěšně splněn!';
+    document.getElementById('lt-res-text').textContent =
+      `Skóre ${levelTest.score} z ${total} (+50 XP). Nové téma je připravené k tréninku!`;
+    document.getElementById('lt-retry-btn').hidden = true;
+  } else {
+    document.getElementById('lt-res-emoji').textContent = '💪';
+    document.getElementById('lt-res-title').textContent = 'Ještě kousek chybí!';
+    document.getElementById('lt-res-text').textContent =
+      `Získal jsi ${levelTest.score} z ${total} bodů. Pro odemčení potřebuješ alespoň 4 správné odpovědi.`;
+    document.getElementById('lt-retry-btn').hidden = false;
+  }
+}
+
+function closeLevelTestModal() {
+  document.getElementById('level-test-modal').hidden = true;
+}
+
+document.getElementById('start-level-test-btn').addEventListener('click', () => {
+  const unlockedIdx = Math.min(TOPICS.length - 1, Math.max(0, state.stats?.unlockedLevel || 0));
+  openLevelTest(unlockedIdx < TOPICS.length - 1 ? unlockedIdx + 1 : TOPICS.length);
+});
+document.getElementById('lt-next-btn').addEventListener('click', () => {
+  levelTest.current++;
+  renderLevelTestQuestion();
+});
+document.getElementById('lt-retry-btn').addEventListener('click', () => {
+  openLevelTest(levelTest.targetLevelIdx);
+});
+document.getElementById('lt-close-btn').addEventListener('click', closeLevelTestModal);
+document.getElementById('lt-done-btn').addEventListener('click', closeLevelTestModal);
+document.getElementById('level-test-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'level-test-modal') closeLevelTestModal();
+});
+
+// ==========================================
+// ÚVODNÍ 4KROKOVÝ PRŮVODCE (TUTORIAL)
+// ==========================================
 let tutStep = 0;
-let tutSelectedAi = false;
+let tutSelectedGoal = 10;
 
 function renderTutorialStep() {
   document.querySelectorAll('.tut-step').forEach((el) => {
@@ -2099,31 +2069,30 @@ function renderTutorialStep() {
 
 function openTutorialModal() {
   tutStep = 0;
-  tutSelectedAi = Boolean(state.aiEnabled);
-  document.getElementById('pick-mode-classic').classList.toggle('selected-choice', !tutSelectedAi);
-  document.getElementById('pick-mode-ai').classList.toggle('selected-choice', tutSelectedAi);
+  tutSelectedGoal = state.stats?.dailyGoal || 10;
+  document.querySelectorAll('#tut-goal-choices .goal-choice-btn').forEach((btn) => {
+    btn.classList.toggle('selected-choice', Number(btn.dataset.goal) === tutSelectedGoal);
+  });
   renderTutorialStep();
   document.getElementById('mode-modal').hidden = false;
 }
 
 function finishTutorial() {
-  state.aiEnabled = tutSelectedAi;
+  state.tutorialSeen = true;
+  state.stats.dailyGoal = tutSelectedGoal;
   saveState();
-  applyAiMode(state.aiEnabled);
+  updateDailyGoalUI();
   document.getElementById('mode-modal').hidden = true;
-  showToast(tutSelectedAi ? 'Nastavena verze s AI Trenérem 🤖' : 'Nastavena klasická offline verze 🌿');
+  showToast(`Denní cíl nastaven na ${tutSelectedGoal} karet denně 🎯`);
 }
 
-document.getElementById('pick-mode-classic').addEventListener('click', () => {
-  tutSelectedAi = false;
-  document.getElementById('pick-mode-classic').classList.add('selected-choice');
-  document.getElementById('pick-mode-ai').classList.remove('selected-choice');
-});
-
-document.getElementById('pick-mode-ai').addEventListener('click', () => {
-  tutSelectedAi = true;
-  document.getElementById('pick-mode-ai').classList.add('selected-choice');
-  document.getElementById('pick-mode-classic').classList.remove('selected-choice');
+document.querySelectorAll('#tut-goal-choices .goal-choice-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    tutSelectedGoal = Number(btn.dataset.goal) || 10;
+    document.querySelectorAll('#tut-goal-choices .goal-choice-btn').forEach((b) =>
+      b.classList.toggle('selected-choice', b === btn)
+    );
+  });
 });
 
 document.getElementById('tut-prev-btn').addEventListener('click', () => {
@@ -2149,33 +2118,14 @@ document.getElementById('guide-replay-tutorial').addEventListener('click', () =>
   openTutorialModal();
 });
 
-document.getElementById('guide-mode-classic').addEventListener('click', () => selectAppMode(false, false));
-document.getElementById('guide-mode-ai').addEventListener('click', () => selectAppMode(true, false));
-
-function initAppMode() {
-  const params = new URLSearchParams(window.location.search);
-  const urlMode = params.get('mode');
-  if (urlMode === 'classic' || urlMode === 'noai') {
-    state.aiEnabled = false;
-    saveState();
-  } else if (urlMode === 'ai') {
-    state.aiEnabled = true;
-    saveState();
-  }
-
-  if (state.aiEnabled === null || state.aiEnabled === undefined) {
-    applyAiMode(false);
-    openTutorialModal();
-  } else {
-    applyAiMode(state.aiEnabled);
-  }
-}
-
-// --- Init App ---
+// --- Init App (Kartičky jako 1. výchozí záložka!) ---
 applyTheme(state.theme);
 populateTopicSelects();
 renderBuilderTopics();
 renderTemplate();
 updateDueIndicators();
 checkUrlPack();
-initAppMode();
+initSrsSession();
+if (!state.tutorialSeen) {
+  openTutorialModal();
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ticha-anglictina-v11';
+const CACHE_NAME = 'ticha-anglictina-v12';
 const ASSETS = [
   './',
   './index.html',

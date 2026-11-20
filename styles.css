@@ -2538,3 +2538,229 @@ textarea:focus {
     width: calc(100% - 10px);
   }
 }
+
+/* ==========================================
+   STATISTIKA ÚSPĚCHU, ODEMYKÁNÍ MAPY & POSTUPOVÝ TEST
+   ========================================== */
+.stats-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 860px) {
+  .stats-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-tile {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-bottom: 4px solid var(--border-edge);
+  border-radius: 16px;
+  padding: 11px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-tile strong {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--primary-text);
+}
+
+.stat-tile span {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.test-banner-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--tip-bg);
+  border-color: var(--tip-border);
+  border-bottom-color: var(--tip-edge);
+  margin-bottom: 14px;
+}
+
+.test-banner-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.test-banner-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 0.96rem;
+  color: var(--tip-text);
+  margin-bottom: 2px;
+}
+
+.test-banner-sub {
+  font-size: 0.78rem;
+  color: var(--tip-text);
+  opacity: 0.9;
+  font-weight: 600;
+}
+
+.test-banner-card .btn {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+}
+
+.map-node.locked {
+  opacity: 0.72;
+  background: var(--surface-soft);
+  border-style: dashed;
+}
+
+.map-node.locked .map-node-circle {
+  background: var(--seg-bg);
+  border-color: var(--border-edge);
+}
+
+.map-node.locked .map-node-go {
+  color: var(--text-muted);
+}
+
+/* Onboarding Daily Goal Grid */
+.goal-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.goal-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border-radius: 16px;
+  border: 2px solid var(--border);
+  border-bottom: 5px solid var(--border-edge);
+  background: var(--surface-soft);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.08s ease, border-bottom-width 0.08s ease;
+}
+
+.goal-choice-btn:active {
+  transform: translateY(3px);
+  border-bottom-width: 2px;
+}
+
+.goal-choice-btn.selected-choice {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  border-bottom-color: var(--primary-edge);
+}
+
+.goal-choice-btn strong {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.goal-choice-btn span {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Level-Up Test Modal */
+.level-test-card {
+  gap: 10px;
+}
+
+.lt-prompt-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.lt-question-cz {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.lt-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.lt-opt-btn {
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  border-bottom: 4px solid var(--border-edge);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 0.94rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.08s ease, border-bottom-width 0.08s ease;
+}
+
+.lt-opt-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.lt-opt-btn.correct {
+  background: var(--success-soft);
+  border-color: var(--success);
+  border-bottom-color: var(--success-edge);
+  color: var(--primary-text);
+}
+
+.lt-opt-btn.wrong {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  border-bottom-color: var(--danger-edge);
+  color: var(--danger);
+}
+
+.lt-feedback {
+  min-height: 22px;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.lt-feedback.ok {
+  color: var(--success);
+}
+
+.lt-feedback.err {
+  color: var(--danger);
+}
+
+.lt-result-body {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.lt-result-body h2 {
+  margin: 4px 0 8px;
+}
