@@ -1,5 +1,41 @@
 /* =========================================================
-   TICHÁ ANGLIČTINA – Hravý, teplý & hmatatelný Tactile UI
+   LOKÁLNÍ OFFLINE FONTY (Nunito + Plus Jakarta Sans, latin + latin-ext)
+   ========================================================= */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+  src: url('./fonts/nunito-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+  src: url('./fonts/nunito-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./fonts/plus-jakarta-sans-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./fonts/plus-jakarta-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* =========================================================
+   TICHÁ ANGLIČTINA – Hravý Duolingo & Tactile 3D UI
    ========================================================= */
 
 :root {
@@ -16,20 +52,25 @@
 
   --text: #1C1917;
   --text-muted: #57534E;
-  --border: #DDD4C6;
-  --border-edge: #C9BDA9;
+  --border: #E2D9CB;
+  --border-edge: #CBBFA9;
 
-  /* Primární sytě tyrkysová & hravá korálová */
-  --primary: #0D9488;
-  --primary-hover: #0F766E;
-  --primary-edge: #0B6B63;
-  --primary-soft: #CCFBF1;
-  --primary-text: #115E59;
+  /* Duolingo zelená + blankytně modrá + korálová */
+  --primary: #58CC02;
+  --primary-hover: #4CB800;
+  --primary-edge: #58A700;
+  --primary-soft: #E5F9D4;
+  --primary-text: #3B7A00;
 
-  --coral: #F97316;
-  --coral-edge: #C2410C;
-  --coral-soft: #FFEDD5;
-  --coral-text: #9A3412;
+  --duo-blue: #1CB0F6;
+  --duo-blue-edge: #1899D6;
+  --duo-blue-soft: #DDF4FF;
+  --duo-blue-text: #0B74A8;
+
+  --coral: #FF9600;
+  --coral-edge: #CC7800;
+  --coral-soft: #FFF1D6;
+  --coral-text: #B45309;
 
   /* Máslově žlutý sticky note pro tipy */
   --tip-bg: #FEF3C7;
@@ -38,22 +79,22 @@
   --tip-text: #78350F;
 
   /* Fonetická bublina */
-  --phonetic-bg: #ECFEFF;
-  --phonetic-border: #5EEAD4;
-  --phonetic-text: #0F766E;
+  --phonetic-bg: #DDF4FF;
+  --phonetic-border: #84D8FF;
+  --phonetic-text: #0B74A8;
 
   /* Stavy */
-  --success: #16A34A;
-  --success-edge: #15803D;
-  --success-soft: #DCFCE7;
-  --warning: #EA580C;
-  --warning-edge: #C2410C;
-  --warning-soft: #FFEDD5;
-  --danger: #DC2626;
-  --danger-edge: #B91C1C;
-  --danger-soft: #FEE2E2;
-  --whatsapp: #16A34A;
-  --whatsapp-edge: #15803D;
+  --success: #58CC02;
+  --success-edge: #58A700;
+  --success-soft: #E5F9D4;
+  --warning: #FF9600;
+  --warning-edge: #CC7800;
+  --warning-soft: #FFF1D6;
+  --danger: #FF4B4B;
+  --danger-edge: #EA2B2B;
+  --danger-soft: #FFE4E4;
+  --whatsapp: #25D366;
+  --whatsapp-edge: #1DA851;
 
   --card-back-bg: #FFFDF9;
   --radius: 20px;
@@ -73,35 +114,40 @@
   --border: #44403C;
   --border-edge: #0C0A09;
 
-  --primary: #14B8A6;
-  --primary-hover: #2DD4BF;
-  --primary-edge: #0F766E;
-  --primary-soft: rgba(20, 184, 166, 0.2);
-  --primary-text: #5EEAD4;
+  --primary: #58CC02;
+  --primary-hover: #69E00F;
+  --primary-edge: #46A302;
+  --primary-soft: rgba(88, 204, 2, 0.2);
+  --primary-text: #89E219;
 
-  --coral: #FB923C;
-  --coral-edge: #C2410C;
-  --coral-soft: rgba(249, 115, 22, 0.22);
-  --coral-text: #FDBA74;
+  --duo-blue: #1CB0F6;
+  --duo-blue-edge: #1899D6;
+  --duo-blue-soft: rgba(28, 176, 246, 0.2);
+  --duo-blue-text: #7DD3FC;
+
+  --coral: #FF9600;
+  --coral-edge: #CC7800;
+  --coral-soft: rgba(255, 150, 0, 0.22);
+  --coral-text: #FCD34D;
 
   --tip-bg: #422006;
   --tip-border: #D97706;
   --tip-edge: #78350F;
   --tip-text: #FEF3C7;
 
-  --phonetic-bg: rgba(20, 184, 166, 0.14);
-  --phonetic-border: #0F766E;
-  --phonetic-text: #5EEAD4;
+  --phonetic-bg: rgba(28, 176, 246, 0.16);
+  --phonetic-border: #1899D6;
+  --phonetic-text: #7DD3FC;
 
-  --success: #22C55E;
-  --success-edge: #15803D;
-  --success-soft: rgba(34, 197, 94, 0.2);
-  --warning: #FB923C;
-  --warning-edge: #C2410C;
-  --warning-soft: rgba(249, 115, 22, 0.2);
-  --danger: #F87171;
-  --danger-edge: #B91C1C;
-  --danger-soft: rgba(239, 68, 68, 0.22);
+  --success: #58CC02;
+  --success-edge: #46A302;
+  --success-soft: rgba(88, 204, 2, 0.2);
+  --warning: #FF9600;
+  --warning-edge: #CC7800;
+  --warning-soft: rgba(255, 150, 0, 0.2);
+  --danger: #FF4B4B;
+  --danger-edge: #EA2B2B;
+  --danger-soft: rgba(255, 75, 75, 0.22);
 
   --card-back-bg: #2E2927;
 }
@@ -2406,5 +2452,89 @@ textarea:focus {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+  }
+}
+
+/* ==========================================
+   DUOLINGO POLISH (lesklý progress bar, modré štítky, hravá mapa)
+   ========================================== */
+.btn-primary {
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.progress-track {
+  height: 14px;
+}
+
+.progress-fill,
+.map-mini-fill {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after,
+.map-mini-fill::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  right: 6px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.topic-chip.active {
+  background: var(--duo-blue);
+  border-color: var(--duo-blue-edge);
+  border-bottom-color: var(--duo-blue-edge);
+  color: #FFFFFF;
+}
+
+.slot-pill {
+  background: var(--duo-blue-soft);
+  color: var(--duo-blue-text);
+  border-color: var(--duo-blue);
+  border-bottom-color: var(--duo-blue-edge);
+}
+
+.slot-pill.selected {
+  background: var(--duo-blue);
+  color: #FFFFFF;
+  border-color: var(--duo-blue-edge);
+  border-bottom-color: var(--duo-blue-edge);
+}
+
+.nav-item.active {
+  color: var(--duo-blue-text);
+  background: var(--duo-blue-soft);
+  border-color: var(--duo-blue);
+  border-bottom: 3px solid var(--duo-blue-edge);
+}
+
+.nav-item.active::before {
+  background: var(--duo-blue);
+}
+
+.icon-btn {
+  color: var(--duo-blue-text);
+}
+
+.phonetic-text {
+  border-bottom-color: var(--duo-blue);
+}
+
+/* Hravá klikatá cesta na mobilu (Duolingo path) */
+@media (max-width: 859px) {
+  .progress-map .map-node:nth-child(even) {
+    margin-left: 10px;
+    width: calc(100% - 10px);
+  }
+  .progress-map .map-node:nth-child(odd) {
+    margin-right: 10px;
+    width: calc(100% - 10px);
   }
 }

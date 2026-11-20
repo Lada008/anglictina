@@ -1,8 +1,12 @@
-const CACHE_NAME = 'ticha-anglictina-v10';
+const CACHE_NAME = 'ticha-anglictina-v11';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './fonts/nunito-latin.woff2',
+  './fonts/nunito-latin-ext.woff2',
+  './fonts/plus-jakarta-sans-latin.woff2',
+  './fonts/plus-jakarta-sans-latin-ext.woff2',
   './data.js',
   './extra_phrases_templates.js',
   './vocabulary_part_1.js',
