@@ -311,6 +311,10 @@ function createInitialState() {
       totalHard: 0,
       totalAgain: 0,
       testsPassed: 0,
+      puzzlesToday: 0,
+      bestBlitz: 0,
+      activeDays: [],
+      claimedQuests: [],
       lastReviewDate: null,
       reviewedToday: 0,
       reviewedDate: today
@@ -350,10 +354,16 @@ function loadState() {
     if (typeof parsed.stats.totalHard !== 'number') parsed.stats.totalHard = 0;
     if (typeof parsed.stats.totalAgain !== 'number') parsed.stats.totalAgain = 0;
     if (typeof parsed.stats.testsPassed !== 'number') parsed.stats.testsPassed = 0;
+    if (typeof parsed.stats.puzzlesToday !== 'number') parsed.stats.puzzlesToday = 0;
+    if (typeof parsed.stats.bestBlitz !== 'number') parsed.stats.bestBlitz = 0;
+    if (!Array.isArray(parsed.stats.activeDays)) parsed.stats.activeDays = [];
+    if (!Array.isArray(parsed.stats.claimedQuests)) parsed.stats.claimedQuests = [];
     if (!parsed.theme) parsed.theme = 'light';
 
     if (parsed.stats.reviewedDate !== todayISO()) {
       parsed.stats.reviewedToday = 0;
+      parsed.stats.puzzlesToday = 0;
+      parsed.stats.claimedQuests = [];
       parsed.stats.reviewedDate = todayISO();
     }
     if (parsed.stats.lastReviewDate && daysDiffFromToday(parsed.stats.lastReviewDate) < -1) {
@@ -956,6 +966,12 @@ function handlePuzzleTap(item, btnEl) {
     ui.puzPlaced.push(item);
     if (ui.puzPlaced.length === ui.puzTokens.length) {
       ui.puzSolved = true;
+      state.stats.puzzlesToday = (state.stats.puzzlesToday || 0) + 1;
+      state.stats.xp = (state.stats.xp || 0) + 10;
+      markTodayActive();
+      checkDailyQuests();
+      saveState();
+      navigator.vibrate?.(15);
     } else {
       feedbackEl.className = 'puzzle-feedback ok';
       feedbackEl.textContent = '✓ Správně, pokračuj…';
@@ -1057,19 +1073,58 @@ document.getElementById('daily-goal-select').addEventListener('change', (e) => {
   showToast(`Denní cíl nastaven na ${state.stats.dailyGoal} karet denně 🎯`);
 });
 
+function markTodayActive() {
+  const today = todayISO();
+  if (!Array.isArray(state.stats.activeDays)) state.stats.activeDays = [];
+  if (!state.stats.activeDays.includes(today)) {
+    state.stats.activeDays.push(today);
+    if (state.stats.activeDays.length > 35) {
+      state.stats.activeDays = state.stats.activeDays.slice(-35);
+    }
+  }
+}
+
+function renderWeekStrip() {
+  const strip = document.getElementById('week-strip');
+  if (!strip) return;
+  const labels = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
+  const now = new Date();
+  const dayOfWeek = (now.getDay() + 6) % 7; // 0 = Monday .. 6 = Sunday
+  const activeSet = new Set(state.stats?.activeDays || []);
+
+  strip.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - dayOfWeek + i);
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const isDone = activeSet.has(iso);
+    const isToday = i === dayOfWeek;
+
+    const el = document.createElement('div');
+    el.className = `week-day ${isDone ? 'done' : ''} ${isToday ? 'today' : ''}`;
+    el.innerHTML = `<span>${labels[i]}</span><span class="week-dot">${isDone ? '✓' : ''}</span>`;
+    strip.appendChild(el);
+  }
+}
+
 function recordReviewStat(xpGain = 10) {
   const today = todayISO();
   if (state.stats.reviewedDate !== today) {
     state.stats.reviewedToday = 0;
+    state.stats.puzzlesToday = 0;
+    state.stats.claimedQuests = [];
     state.stats.reviewedDate = today;
   }
   state.stats.reviewedToday += 1;
   state.stats.xp = (state.stats.xp || 0) + xpGain;
+  markTodayActive();
 
   const goal = state.stats.dailyGoal || 10;
   if (state.stats.reviewedToday === goal) {
+    launchConfetti();
     showToast(`🏆 Skvělá práce! Dnešní cíl (${goal} karet) je splněn!`);
   }
+  checkDailyQuests();
 
   if (state.stats.lastReviewDate !== today) {
     if (state.stats.lastReviewDate && daysDiffFromToday(state.stats.lastReviewDate) === -1) {
@@ -1082,6 +1137,7 @@ function recordReviewStat(xpGain = 10) {
 }
 
 function renderSrsCard() {
+  renderWeekStrip();
   updateDailyGoalUI();
   const remaining = ui.srsQueue.length;
   document.getElementById('srs-remaining').textContent = String(remaining);
@@ -1170,6 +1226,7 @@ function gradeCurrentCard(grade) {
     card.interval = 0;
     card.dueDate = todayISO();
     state.stats.totalAgain = (state.stats.totalAgain || 0) + 1;
+    ui.combo = 0;
     const insertAt = Math.min(ui.srsQueue.length, 2);
     ui.srsQueue.splice(insertAt, 0, card.id);
   } else if (grade === 'hard') {
@@ -1177,6 +1234,7 @@ function gradeCurrentCard(grade) {
     card.interval = 1;
     card.dueDate = addDaysISO(1);
     state.stats.totalHard = (state.stats.totalHard || 0) + 1;
+    ui.combo = 0;
     ui.srsDoneCount++;
     recordReviewStat(5);
   } else if (grade === 'good') {
@@ -1185,8 +1243,21 @@ function gradeCurrentCard(grade) {
     card.interval = nextDays;
     card.dueDate = addDaysISO(nextDays);
     state.stats.totalGood = (state.stats.totalGood || 0) + 1;
+    ui.combo = (ui.combo || 0) + 1;
     ui.srsDoneCount++;
-    recordReviewStat(10);
+    const bonus = ui.combo >= 3 ? Math.min(10, ui.combo * 2) : 0;
+    recordReviewStat(10 + bonus);
+    navigator.vibrate?.(12);
+  }
+
+  const comboEl = document.getElementById('combo-badge');
+  if (comboEl) {
+    if ((ui.combo || 0) >= 2) {
+      comboEl.textContent = `🔥 ${ui.combo}× COMBO`;
+      comboEl.hidden = false;
+    } else {
+      comboEl.hidden = true;
+    }
   }
 
   saveState();
@@ -1894,6 +1965,12 @@ function renderProgressMap() {
   document.getElementById('stat-streak').textContent = String(state.stats?.streak || 0);
   document.getElementById('stat-tests').textContent = String(state.stats?.testsPassed || 0);
 
+  renderDailyQuests();
+  const blitzRec = document.getElementById('blitz-record-label');
+  if (blitzRec) {
+    blitzRec.textContent = `Tvůj rekord: ${state.stats?.bestBlitz || 0} bodů · Překonej sám sebe!`;
+  }
+
   // Banner pro postupový test
   const nextTitle = document.getElementById('next-level-title');
   const nextSub = document.getElementById('next-level-sub');
@@ -2285,6 +2362,7 @@ function finishLevelTest() {
     document.getElementById('lt-res-text').textContent =
       `Skóre ${levelTest.score} z ${total} (+50 XP). Nové téma je připravené k tréninku!`;
     document.getElementById('lt-retry-btn').hidden = true;
+    launchConfetti();
   } else {
     document.getElementById('lt-res-emoji').textContent = '💪';
     document.getElementById('lt-res-title').textContent = 'Ještě kousek chybí!';
@@ -2316,10 +2394,11 @@ document.getElementById('level-test-modal').addEventListener('click', (e) => {
 });
 
 // ==========================================
-// ÚVODNÍ 4KROKOVÝ PRŮVODCE (TUTORIAL)
+// ÚVODNÍ 4KROKOVÝ PRŮVODCE (TUTORIAL + PROFIL)
 // ==========================================
 let tutStep = 0;
 let tutSelectedGoal = 10;
+let tutSelectedProfile = 'young';
 
 function renderTutorialStep() {
   document.querySelectorAll('.tut-step').forEach((el) => {
@@ -2335,7 +2414,11 @@ function renderTutorialStep() {
 function openTutorialModal() {
   tutStep = 0;
   tutSelectedGoal = state.stats?.dailyGoal || 10;
-  document.querySelectorAll('#tut-goal-choices .goal-choice-btn').forEach((btn) => {
+  tutSelectedProfile = localStorage.getItem(PROFILE_KEY) || 'young';
+  document.querySelectorAll('#tut-profile-choices .mode-choice-card').forEach((btn) => {
+    btn.classList.toggle('selected-choice', btn.dataset.profile === tutSelectedProfile);
+  });
+  document.querySelectorAll('#tut-goal-choices .goal-pill-btn').forEach((btn) => {
     btn.classList.toggle('selected-choice', Number(btn.dataset.goal) === tutSelectedGoal);
   });
   renderTutorialStep();
@@ -2345,16 +2428,30 @@ function openTutorialModal() {
 function finishTutorial() {
   state.tutorialSeen = true;
   state.stats.dailyGoal = tutSelectedGoal;
+  applyUserProfile(tutSelectedProfile);
   saveState();
   updateDailyGoalUI();
   document.getElementById('mode-modal').hidden = true;
-  showToast(`Denní cíl nastaven na ${tutSelectedGoal} karet denně 🎯`);
+  showToast(
+    tutSelectedProfile === 'senior'
+      ? `Pohodový režim zapnut 🌿 (cíl ${tutSelectedGoal} karet)`
+      : `Herní režim zapnut ⚡ (cíl ${tutSelectedGoal} karet)`
+  );
 }
 
-document.querySelectorAll('#tut-goal-choices .goal-choice-btn').forEach((btn) => {
+document.querySelectorAll('#tut-profile-choices .mode-choice-card').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    tutSelectedProfile = btn.dataset.profile === 'senior' ? 'senior' : 'young';
+    document.querySelectorAll('#tut-profile-choices .mode-choice-card').forEach((b) =>
+      b.classList.toggle('selected-choice', b === btn)
+    );
+  });
+});
+
+document.querySelectorAll('#tut-goal-choices .goal-pill-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
     tutSelectedGoal = Number(btn.dataset.goal) || 10;
-    document.querySelectorAll('#tut-goal-choices .goal-choice-btn').forEach((b) =>
+    document.querySelectorAll('#tut-goal-choices .goal-pill-btn').forEach((b) =>
       b.classList.toggle('selected-choice', b === btn)
     );
   });
@@ -2461,33 +2558,282 @@ document.getElementById('lang-select').addEventListener('change', async (e) => {
 });
 
 // ==========================================
-// VELIKOST PÍSMA (pro starší i mladší uživatele)
+// KONFETY (TICHÁ OSLAVA ÚSPĚCHU)
 // ==========================================
-const FONT_SIZE_KEY = 'ticha_font_size';
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 
-function applyFontSize(size) {
-  const isLarge = size === 'large';
-  document.documentElement.dataset.font = isLarge ? 'large' : 'normal';
-  localStorage.setItem(FONT_SIZE_KEY, isLarge ? 'large' : 'normal');
-  const normBtn = document.getElementById('font-size-normal');
-  const largeBtn = document.getElementById('font-size-large');
-  if (normBtn) normBtn.classList.toggle('active-mode', !isLarge);
-  if (largeBtn) largeBtn.classList.toggle('active-mode', isLarge);
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const colors = ['#58CC02', '#1CB0F6', '#FF9600', '#FFC800', '#FF4B4B', '#CE82FF'];
+  const pieces = Array.from({ length: 65 }, () => ({
+    x: canvas.width * (0.15 + Math.random() * 0.7),
+    y: -10 - Math.random() * 60,
+    vx: (Math.random() - 0.5) * 6,
+    vy: 3 + Math.random() * 5,
+    size: 6 + Math.random() * 6,
+    rot: Math.random() * Math.PI * 2,
+    vrot: (Math.random() - 0.5) * 0.25,
+    color: colors[Math.floor(Math.random() * colors.length)]
+  }));
+
+  let frame = 0;
+  function tick() {
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach((p) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.12;
+      p.rot += p.vrot;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.65);
+      ctx.restore();
+    });
+    if (frame < 85) {
+      requestAnimationFrame(tick);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  requestAnimationFrame(tick);
 }
 
-document.getElementById('font-size-normal').addEventListener('click', () => {
-  applyFontSize('normal');
-  showToast('Velikost písma: Normální');
+// ==========================================
+// DENNÍ MISE (3 DENNÍ VÝZVY)
+// ==========================================
+function getDailyQuests() {
+  const goal = state.stats?.dailyGoal || 10;
+  const rev = state.stats?.reviewedToday || 0;
+  const puz = state.stats?.puzzlesToday || 0;
+  return [
+    { id: 'q-rev5', icon: '🃏', title: 'Zopakuj 5 kartiček', current: Math.min(5, rev), target: 5, xp: 25 },
+    { id: 'q-puz2', icon: '🧱', title: 'Slož 2 věty ve Skládačce', current: Math.min(2, puz), target: 2, xp: 30 },
+    { id: 'q-goal', icon: '🎯', title: `Splň svůj denní cíl (${goal})`, current: Math.min(goal, rev), target: goal, xp: 50 }
+  ];
+}
+
+function checkDailyQuests() {
+  if (!Array.isArray(state.stats.claimedQuests)) state.stats.claimedQuests = [];
+  const quests = getDailyQuests();
+  let newlyCompleted = false;
+  quests.forEach((q) => {
+    if (q.current >= q.target && !state.stats.claimedQuests.includes(q.id)) {
+      state.stats.claimedQuests.push(q.id);
+      state.stats.xp = (state.stats.xp || 0) + q.xp;
+      newlyCompleted = true;
+      showToast(`🎯 Mise splněna: ${q.title} (+${q.xp} XP)!`);
+    }
+  });
+  if (newlyCompleted) {
+    launchConfetti();
+  }
+}
+
+function renderDailyQuests() {
+  const el = document.getElementById('daily-quests-list');
+  if (!el) return;
+  const quests = getDailyQuests();
+  el.innerHTML = '';
+  quests.forEach((q) => {
+    const isDone = q.current >= q.target;
+    const pct = Math.min(100, Math.round((q.current / q.target) * 100));
+    const item = document.createElement('div');
+    item.className = `quest-item ${isDone ? 'done' : ''}`;
+    item.innerHTML = `
+      <div class="quest-icon">${isDone ? '✓' : q.icon}</div>
+      <div class="quest-body">
+        <div class="quest-title-row">
+          <span class="quest-title">${q.title} (${q.current}/${q.target})</span>
+          <span class="quest-reward">${isDone ? 'Hotovo ✓' : `+${q.xp} XP`}</span>
+        </div>
+        <div class="map-mini-bar"><div class="map-mini-fill" style="width:${pct}%"></div></div>
+      </div>
+    `;
+    el.appendChild(item);
+  });
+}
+
+// ==========================================
+// BLESKOVÁ VÝZVA 60 s (HERNÍ REŽIM)
+// ==========================================
+const blitz = {
+  timerId: null,
+  timeLeft: 60,
+  score: 0,
+  combo: 0,
+  pool: []
+};
+
+function stopBlitzTimer() {
+  if (blitz.timerId) {
+    clearInterval(blitz.timerId);
+    blitz.timerId = null;
+  }
+}
+
+function openBlitzChallenge() {
+  stopBlitzTimer();
+  const lang = getLang();
+  const source = state.cards.length >= 8 ? state.cards : lang.phrases.concat(lang.vocabulary.slice(0, 60));
+  const seen = new Set();
+  blitz.pool = [];
+  source.forEach((item) => {
+    const en = item.en ?? item.target ?? '';
+    if (en && item.cz && !seen.has(en.toLowerCase())) {
+      seen.add(en.toLowerCase());
+      blitz.pool.push({ cz: item.cz, en });
+    }
+  });
+  if (blitz.pool.length < 4) {
+    showToast('Přidej si víc slovíček pro Bleskovou výzvu.');
+    return;
+  }
+
+  blitz.timeLeft = 60;
+  blitz.score = 0;
+  blitz.combo = 0;
+
+  document.getElementById('blitz-play-body').hidden = false;
+  document.getElementById('blitz-result-body').hidden = true;
+  document.getElementById('blitz-modal').hidden = false;
+  updateBlitzHud();
+  renderBlitzQuestion();
+
+  blitz.timerId = setInterval(() => {
+    blitz.timeLeft--;
+    updateBlitzHud();
+    if (blitz.timeLeft <= 0) {
+      finishBlitz();
+    }
+  }, 1000);
+}
+
+function updateBlitzHud() {
+  document.getElementById('blitz-timer').textContent = `⏱️ ${blitz.timeLeft} s`;
+  document.getElementById('blitz-score').textContent = `Skóre: ${blitz.score}`;
+  document.getElementById('blitz-time-bar').style.width = `${Math.max(0, Math.round((blitz.timeLeft / 60) * 100))}%`;
+  const comboEl = document.getElementById('blitz-combo');
+  if (blitz.combo >= 2) {
+    comboEl.textContent = `🔥 ${blitz.combo}×`;
+    comboEl.hidden = false;
+  } else {
+    comboEl.hidden = true;
+  }
+}
+
+function renderBlitzQuestion() {
+  const q = blitz.pool[Math.floor(Math.random() * blitz.pool.length)];
+  const wrongs = [];
+  const used = new Set([q.en.toLowerCase()]);
+  for (const cand of shuffleArray(blitz.pool)) {
+    if (!used.has(cand.en.toLowerCase())) {
+      used.add(cand.en.toLowerCase());
+      wrongs.push(cand.en);
+      if (wrongs.length === 3) break;
+    }
+  }
+  const options = shuffleArray([q.en, ...wrongs]);
+
+  document.getElementById('blitz-question-cz').textContent = q.cz;
+  const optsEl = document.getElementById('blitz-options');
+  optsEl.innerHTML = '';
+  options.forEach((opt) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lt-opt-btn';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => {
+      if (opt === q.en) {
+        blitz.combo++;
+        blitz.score += 10 + Math.min(20, (blitz.combo - 1) * 5);
+        btn.classList.add('correct');
+        navigator.vibrate?.(12);
+      } else {
+        blitz.combo = 0;
+        btn.classList.add('wrong');
+      }
+      updateBlitzHud();
+      setTimeout(() => {
+        if (blitz.timeLeft > 0) renderBlitzQuestion();
+      }, 180);
+    });
+    optsEl.appendChild(btn);
+  });
+}
+
+function finishBlitz() {
+  stopBlitzTimer();
+  document.getElementById('blitz-play-body').hidden = true;
+  document.getElementById('blitz-result-body').hidden = false;
+
+  const prevBest = state.stats.bestBlitz || 0;
+  const isNewRecord = blitz.score > prevBest;
+  if (isNewRecord) {
+    state.stats.bestBlitz = blitz.score;
+  }
+  const xpEarned = Math.min(60, Math.round(blitz.score / 5));
+  state.stats.xp = (state.stats.xp || 0) + xpEarned;
+  markTodayActive();
+  saveState();
+  if (ui.activeTab === 'journey') renderProgressMap();
+
+  document.getElementById('blitz-res-emoji').textContent = isNewRecord ? '🏆' : '⚡';
+  document.getElementById('blitz-res-title').textContent = isNewRecord ? 'Nový osobní rekord!' : 'Skvělá jízda!';
+  document.getElementById('blitz-res-text').textContent =
+    `Získal jsi ${blitz.score} bodů (+${xpEarned} XP). Tvůj nejlepší rekord je ${state.stats.bestBlitz} bodů.`;
+
+  if (isNewRecord && blitz.score > 0) launchConfetti();
+}
+
+function closeBlitzModal() {
+  stopBlitzTimer();
+  document.getElementById('blitz-modal').hidden = true;
+}
+
+document.getElementById('map-blitz-btn').addEventListener('click', openBlitzChallenge);
+document.getElementById('srs-blitz-btn').addEventListener('click', openBlitzChallenge);
+document.getElementById('blitz-again-btn').addEventListener('click', openBlitzChallenge);
+document.getElementById('blitz-close-btn').addEventListener('click', closeBlitzModal);
+document.getElementById('blitz-done-btn').addEventListener('click', closeBlitzModal);
+document.getElementById('blitz-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'blitz-modal') closeBlitzModal();
 });
 
-document.getElementById('font-size-large').addEventListener('click', () => {
-  applyFontSize('large');
-  showToast('Velikost písma: Větší Aa+');
+// ==========================================
+// PROFIL APLIKACE (⚡ HERNÍ MLADÍ vs 🌿 POHODOVÝ SENIOŘI)
+// ==========================================
+const PROFILE_KEY = 'ticha_ui_profile';
+
+function applyUserProfile(profile) {
+  const isSenior = profile === 'senior';
+  document.documentElement.dataset.profile = isSenior ? 'senior' : 'young';
+  localStorage.setItem(PROFILE_KEY, isSenior ? 'senior' : 'young');
+  const yBtn = document.getElementById('profile-young-btn');
+  const sBtn = document.getElementById('profile-senior-btn');
+  if (yBtn) yBtn.classList.toggle('active-mode', !isSenior);
+  if (sBtn) sBtn.classList.toggle('active-mode', isSenior);
+}
+
+document.getElementById('profile-young-btn').addEventListener('click', () => {
+  applyUserProfile('young');
+  showToast('Přepnuto na Herní režim (Mladí) ⚡');
+});
+
+document.getElementById('profile-senior-btn').addEventListener('click', () => {
+  applyUserProfile('senior');
+  showToast('Přepnuto na Pohodový režim (Senioři) 🌿');
 });
 
 // --- Init App (Kartičky jako 1. výchozí záložka!) ---
 async function initApp() {
-  applyFontSize(localStorage.getItem(FONT_SIZE_KEY) || 'normal');
+  applyUserProfile(localStorage.getItem(PROFILE_KEY) || 'young');
   populateTopicSelects();
   await ensureLanguageLoaded(activeLangCode);
   state = loadState();

@@ -172,9 +172,13 @@
       <!-- 1. TAB: KARTIČKY (SRS) -->
       <section id="view-cards" class="view active" aria-label="Kartičky">
         <div class="srs-top-bar">
+          <!-- Týdenní kalendář docházky (Po–Ne) -->
+          <div class="week-strip" id="week-strip" aria-label="Týdenní docházka"></div>
+
           <div class="daily-goal-bar">
             <span class="daily-goal-label" id="daily-goal-label">🎯 Denní cíl: <strong>0 / 10</strong></span>
             <div class="goal-controls-right">
+              <span class="combo-pill" id="combo-badge" hidden>🔥 2× COMBO</span>
               <select id="srs-topic-filter" class="compact-select" aria-label="Filtrovat kartičky podle tématu">
                 <option value="all">Všechna témata</option>
               </select>
@@ -292,6 +296,7 @@
           </div>
           <div class="done-actions">
             <button type="button" class="btn btn-primary btn-full" id="srs-practice-extra-btn">Procvičit karty navíc</button>
+            <button type="button" class="btn btn-coral btn-full young-only" id="srs-blitz-btn">⚡ Blesková výzva (60 s)</button>
             <button type="button" class="btn btn-secondary btn-full" id="srs-go-builder-btn">Přejít do Stavebnice</button>
           </div>
         </div>
@@ -331,6 +336,19 @@
             <strong id="stat-tests">0</strong>
             <span>Testy 🏆</span>
           </div>
+        </div>
+
+        <!-- Dnešní mise (Daily Quests) -->
+        <h2 class="section-heading">🎯 Dnešní mise (denní výzvy)</h2>
+        <div class="quests-list" id="daily-quests-list"></div>
+
+        <!-- Blesková výzva 60s (pro Herní režim) -->
+        <div class="card blitz-banner-card young-only" id="blitz-card">
+          <div class="test-banner-info">
+            <div class="test-banner-title">⚡ Blesková výzva (60 sekund)</div>
+            <div class="test-banner-sub" id="blitz-record-label">Tvůj rekord: 0 bodů · Překonej sám sebe!</div>
+          </div>
+          <button type="button" class="btn btn-coral" id="map-blitz-btn">Hrát ⚡</button>
         </div>
 
         <!-- Banner pro postupový test -->
@@ -594,10 +612,11 @@
           <p><strong>📱</strong> Ukázat obsluze přes celý displej · <strong>🐢</strong> Pomalý poslech · <strong>🔊</strong> Normální poslech · <strong>💡</strong> Vysvětlení gramatiky · <strong>🌙</strong> Tmavý režim.</p>
         </div>
         <div class="guide-item mode-switch-box">
-          <strong>🔍 Velikost písma (pro pohodlnější čtení)</strong>
+          <strong>👤 Režim aplikace (Senioři / Mladí)</strong>
+          <p>Přepni si styl aplikace kdykoli bez ztráty postupu:</p>
           <div class="btn-grid-2">
-            <button type="button" class="btn btn-secondary active-mode" id="font-size-normal">Aa Normální</button>
-            <button type="button" class="btn btn-secondary" id="font-size-large">Aa+ Větší písmo</button>
+            <button type="button" class="btn btn-secondary active-mode" id="profile-young-btn">⚡ Herní (Mladí)</button>
+            <button type="button" class="btn btn-secondary" id="profile-senior-btn">🌿 Pohodový (Senioři)</button>
           </div>
         </div>
       </div>
@@ -616,30 +635,37 @@
         <span class="tut-dot"></span>
       </div>
 
-      <!-- Step 0: Welcome & Daily Goal -->
+      <!-- Step 0: Welcome & Profile Choice (Senior / Young) + Daily Goal -->
       <div class="tut-step" data-step="0">
         <div class="mode-modal-head">
-          <div class="done-emoji">🤫</div>
+          <div class="done-emoji">🌍</div>
           <h2>Vítej v Cizích jazycích na cesty!</h2>
-          <p class="muted-text">100 % offline trénink 🇬🇧 EN · 🇩🇪 DE · 🇵🇱 PL · 🇪🇸 ES bez mikrofonu. Vyber si svůj denní cíl:</p>
+          <p class="muted-text">Vyber si, jakým stylem chceš trénovat (kdykoli přepneš pod <strong>❓</strong>):</p>
         </div>
-        <div class="goal-choice-grid" id="tut-goal-choices">
-          <button type="button" class="goal-choice-btn" data-goal="5">
-            <strong>5 karet</strong>
-            <span>Pohodové tempo</span>
+        <div class="mode-choice-list" id="tut-profile-choices">
+          <button type="button" class="mode-choice-card selected-choice" data-profile="young">
+            <div class="mode-choice-icon">⚡</div>
+            <div class="mode-choice-body">
+              <strong>Herní režim (Pro mladé &amp; výzvy)</strong>
+              <span>Combo násobiče, 60s bleskový kvíz, denní mise, XP, svajpování a konfety.</span>
+            </div>
           </button>
-          <button type="button" class="goal-choice-btn selected-choice" data-goal="10">
-            <strong>10 karet</strong>
-            <span>Doporučeno 🎯</span>
+          <button type="button" class="mode-choice-card" data-profile="senior">
+            <div class="mode-choice-icon">🌿</div>
+            <div class="mode-choice-body">
+              <strong>Pohodový režim (Pro seniory &amp; klid)</strong>
+              <span>Větší čitelné písmo, velká přehledná tlačítka, žádný stres z časovačů a jasný postup.</span>
+            </div>
           </button>
-          <button type="button" class="goal-choice-btn" data-goal="15">
-            <strong>15 karet</strong>
-            <span>Rychlý pokrok</span>
-          </button>
-          <button type="button" class="goal-choice-btn" data-goal="20">
-            <strong>20 karet</strong>
-            <span>Intenzivní 🔥</span>
-          </button>
+        </div>
+        <div class="tut-goal-inline">
+          <span class="tut-goal-title">Denní cíl:</span>
+          <div class="goal-pills-row" id="tut-goal-choices">
+            <button type="button" class="goal-pill-btn" data-goal="5">5</button>
+            <button type="button" class="goal-pill-btn selected-choice" data-goal="10">10 🎯</button>
+            <button type="button" class="goal-pill-btn" data-goal="15">15</button>
+            <button type="button" class="goal-pill-btn" data-goal="20">20 🔥</button>
+          </div>
         </div>
       </div>
 
@@ -725,6 +751,42 @@
       </div>
     </div>
   </div>
+
+  <!-- Blitz 60s Challenge Modal (Herní režim) -->
+  <div id="blitz-modal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Blesková výzva 60 sekund">
+    <div class="card modal-card level-test-card">
+      <div class="show-card-top">
+        <h2>⚡ Blesková výzva</h2>
+        <button type="button" class="icon-btn icon-btn-sm" id="blitz-close-btn" aria-label="Zavřít">✕</button>
+      </div>
+
+      <div id="blitz-play-body">
+        <div class="blitz-hud">
+          <span class="blitz-timer" id="blitz-timer">⏱️ 60 s</span>
+          <span class="blitz-score" id="blitz-score">Skóre: 0</span>
+          <span class="combo-pill" id="blitz-combo" hidden>🔥 2×</span>
+        </div>
+        <div class="progress-track" style="margin-bottom: 12px;">
+          <div class="progress-fill" id="blitz-time-bar" style="width: 100%"></div>
+        </div>
+        <div class="lt-question-cz" id="blitz-question-cz"></div>
+        <div class="lt-options" id="blitz-options"></div>
+      </div>
+
+      <div id="blitz-result-body" class="lt-result-body" hidden>
+        <div class="done-emoji" id="blitz-res-emoji">⚡</div>
+        <h2 id="blitz-res-title">Čas vypršel!</h2>
+        <p class="muted-text" id="blitz-res-text"></p>
+        <div class="action-row">
+          <button type="button" class="btn btn-coral" id="blitz-again-btn">⚡ Hrát znovu</button>
+          <button type="button" class="btn btn-secondary" id="blitz-done-btn">Zavřít</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confetti Overlay -->
+  <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
 
   <!-- Toast Notification -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
