@@ -1269,3 +1269,243 @@ textarea:focus {
   width: 100%;
   max-width: 440px;
 }
+
+/* Compact Zero-Scroll Mobile Layout for Stavebnice */
+.app-header {
+  padding: calc(7px + env(safe-area-inset-top)) 14px 7px;
+}
+
+.app-subtitle {
+  display: none;
+}
+
+.brand-badge {
+  width: 32px;
+  height: 32px;
+  font-size: 17px;
+  border-radius: 10px;
+}
+
+.app-title {
+  font-size: 0.98rem;
+}
+
+.app-main {
+  padding: 10px 14px calc(76px + env(safe-area-inset-bottom));
+}
+
+.topic-scroll {
+  gap: 6px;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.topic-chip {
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+
+.segmented-control {
+  margin-bottom: 10px;
+  padding: 3px;
+}
+
+.seg-btn {
+  padding: 7px 8px;
+  font-size: 0.82rem;
+}
+
+.compact-card {
+  padding: 13px 14px;
+}
+
+.card-top-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.card-top-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.card-top-left > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.topic-ill-mini {
+  width: 44px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.topic-ill-mini svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 7px;
+}
+
+.icon-btn-sm {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.template-sentence {
+  font-size: 1.12rem;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.slot-pill {
+  font-size: 1rem;
+  padding: 2px 8px;
+}
+
+.slot-picker {
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.slot-option-btn {
+  padding: 5px 10px;
+  font-size: 0.82rem;
+}
+
+.divider {
+  margin: 10px 0;
+}
+
+.cz-text {
+  font-size: 0.96rem;
+}
+
+.phonetic-text {
+  font-size: 0.86rem;
+  padding: 5px 9px;
+}
+
+/* Tip Bar inside Card */
+.tip-bar-btn {
+  margin-top: 10px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.tip-bar-btn:active {
+  border-color: var(--primary);
+}
+
+.tip-bar-icon {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+}
+
+.tip-bar-preview {
+  flex: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 550;
+}
+
+.tip-bar-arrow {
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Compact Puzzle */
+.puzzle-cz {
+  font-size: 1.02rem;
+  margin-bottom: 6px;
+}
+
+.puzzle-phonetic-row {
+  margin-bottom: 8px;
+}
+
+.puzzle-answer-zone {
+  min-height: 56px;
+  padding: 8px;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.puzzle-feedback-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 22px;
+  margin-bottom: 8px;
+}
+
+.puzzle-feedback {
+  margin-bottom: 0;
+  font-size: 0.82rem;
+}
+
+.puzzle-bank {
+  gap: 6px;
+}
+
+.word-chip {
+  padding: 7px 11px;
+  font-size: 0.88rem;
+  border-radius: 10px;
+}
+
+.action-row {
+  margin-top: 10px;
+}
+
+.btn {
+  padding: 10px 12px;
+  font-size: 0.86rem;
+}
+
+/* Tip Modal */
+.tip-modal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tip-modal-en {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--primary-text);
+  background: var(--phonetic-bg);
+  border: 1px solid var(--phonetic-border);
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.tip-modal-body {
+  font-size: 0.94rem;
+  line-height: 1.55;
+  color: var(--text);
+}

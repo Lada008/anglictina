@@ -65,29 +65,27 @@
 
         <!-- Mode A: Šablony -->
         <div id="builder-templates-panel" class="builder-panel">
-          <div class="panel-meta">
-            <span class="topic-tag" id="tpl-topic-badge"></span>
-            <span class="counter-text" id="tpl-counter">1 / 1</span>
-          </div>
-
-          <article class="card template-card">
-            <div class="template-card-top">
-              <span class="hint-label">Klikni na zvýrazněnou část</span>
+          <article class="card template-card compact-card">
+            <div class="card-top-compact">
+              <div class="card-top-left">
+                <div class="topic-ill-mini" id="tpl-illustration"></div>
+                <div>
+                  <span class="topic-tag" id="tpl-topic-badge"></span>
+                  <span class="counter-text" id="tpl-counter">1 / 1</span>
+                </div>
+              </div>
               <div class="card-tool-btns">
-                <button type="button" class="icon-btn" id="tpl-show-btn" aria-label="Ukázat obsluze na celý displej" title="Ukázat na celý displej">📱</button>
-                <button type="button" class="icon-btn" id="tpl-slow-btn" aria-label="Přehrát pomalu" title="Poslechnout pomalu">🐢</button>
-                <button type="button" class="icon-btn speak-btn" id="tpl-speak-btn" aria-label="Přehrát výslovnost" title="Poslechnout výslovnost">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <button type="button" class="icon-btn icon-btn-sm" id="tpl-show-btn" aria-label="Ukázat obsluze na celý displej" title="Ukázat na displej">📱</button>
+                <button type="button" class="icon-btn icon-btn-sm" id="tpl-slow-btn" aria-label="Přehrát pomalu" title="Poslechnout pomalu">🐢</button>
+                <button type="button" class="icon-btn icon-btn-sm speak-btn" id="tpl-speak-btn" aria-label="Přehrát výslovnost" title="Poslechnout">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
                 </button>
               </div>
             </div>
 
-            <div class="topic-illustration" id="tpl-illustration"></div>
-
             <div class="template-sentence" id="tpl-en-container"></div>
 
             <div class="slot-picker" id="tpl-slot-picker" hidden>
-              <div class="slot-picker-title">Vyber variantu:</div>
               <div class="slot-options" id="tpl-slot-options"></div>
             </div>
 
@@ -97,6 +95,12 @@
               <div class="cz-text" id="tpl-cz-text"></div>
               <div class="phonetic-text" id="tpl-phonetic-text"></div>
             </div>
+
+            <button type="button" class="tip-bar-btn" id="tpl-tip-btn">
+              <span class="tip-bar-icon">💡</span>
+              <span class="tip-bar-preview" id="tpl-tip-preview">Proč je věta takto poskládaná?</span>
+              <span class="tip-bar-arrow">›</span>
+            </button>
           </article>
 
           <div class="action-row">
@@ -110,21 +114,26 @@
 
         <!-- Mode B: Skládačka -->
         <div id="builder-puzzle-panel" class="builder-panel" hidden>
-          <div class="panel-meta">
-            <span class="topic-tag" id="puz-topic-badge"></span>
-            <span class="counter-text" id="puz-counter">1 / 1</span>
-          </div>
+          <article class="card puzzle-card compact-card">
+            <div class="card-top-compact">
+              <div class="card-top-left">
+                <div class="topic-ill-mini" id="puz-illustration"></div>
+                <div>
+                  <span class="topic-tag" id="puz-topic-badge"></span>
+                  <span class="counter-text" id="puz-counter">1 / 1</span>
+                </div>
+              </div>
+              <div class="card-tool-btns">
+                <button type="button" class="icon-btn icon-btn-sm" id="puz-tip-btn" aria-label="Vysvětlení věty" title="Proč je věta takto?">💡</button>
+                <button type="button" class="icon-btn icon-btn-sm" id="puz-hint-word-btn" aria-label="Doplnit další slovo" title="Doplnit další slovo">✨</button>
+                <button type="button" class="icon-btn icon-btn-sm speak-btn" id="puz-speak-btn" aria-label="Přehrát větu" title="Poslechnout">🔊</button>
+              </div>
+            </div>
 
-          <article class="card puzzle-card">
-            <div class="topic-illustration" id="puz-illustration"></div>
-            <div class="puzzle-prompt-label">Sestav anglickou větu:</div>
             <div class="puzzle-cz" id="puz-cz-text"></div>
 
             <div class="puzzle-phonetic-row">
-              <div class="puzzle-helper-links">
-                <button type="button" class="text-link-btn" id="puz-hint-toggle">Ukázat výslovnost</button>
-                <button type="button" class="text-link-btn" id="puz-hint-word-btn">💡 Doplnit další slovo</button>
-              </div>
+              <button type="button" class="text-link-btn" id="puz-hint-toggle">Ukázat výslovnost</button>
               <div class="phonetic-text" id="puz-phonetic-text" hidden></div>
             </div>
 
@@ -132,15 +141,17 @@
               <span class="placeholder-text">Klikej na slova níže ve správném pořadí…</span>
             </div>
 
-            <div class="puzzle-feedback" id="puz-feedback" aria-live="polite"></div>
+            <div class="puzzle-feedback-row">
+              <div class="puzzle-feedback" id="puz-feedback" aria-live="polite"></div>
+              <button type="button" class="text-link-btn" id="puz-solved-tip-btn" hidden>💡 Vysvětlení</button>
+            </div>
 
             <div class="puzzle-bank" id="puz-bank"></div>
           </article>
 
           <div class="action-row">
             <button type="button" class="btn btn-secondary" id="puz-reset-btn">↺ Znovu</button>
-            <button type="button" class="btn btn-secondary" id="puz-speak-btn" aria-label="Přehrát větu">🔊 Poslech</button>
-            <button type="button" class="btn btn-primary" id="puz-next-btn">Další →</button>
+            <button type="button" class="btn btn-primary" id="puz-next-btn">Další věta →</button>
           </div>
         </div>
       </section>
@@ -184,10 +195,11 @@
                 <div class="card-face-header">
                   <span class="topic-tag" id="card-topic-back"></span>
                   <div class="card-tool-btns">
-                    <button type="button" class="icon-btn" id="card-show-btn" aria-label="Ukázat na celý displej" title="Ukázat obsluze">📱</button>
-                    <button type="button" class="icon-btn" id="card-slow-btn" aria-label="Přehrát pomalu" title="Poslechnout pomalu">🐢</button>
-                    <button type="button" class="icon-btn speak-btn speak-btn-card" id="card-speak-btn" aria-label="Přehrát výslovnost" title="Poslechnout výslovnost">
-                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    <button type="button" class="icon-btn icon-btn-sm" id="card-tip-btn" aria-label="Vysvětlení věty" title="Proč je věta takto?">💡</button>
+                    <button type="button" class="icon-btn icon-btn-sm" id="card-show-btn" aria-label="Ukázat na celý displej" title="Ukázat obsluze">📱</button>
+                    <button type="button" class="icon-btn icon-btn-sm" id="card-slow-btn" aria-label="Přehrát pomalu" title="Poslechnout pomalu">🐢</button>
+                    <button type="button" class="icon-btn icon-btn-sm speak-btn speak-btn-card" id="card-speak-btn" aria-label="Přehrát výslovnost" title="Poslechnout výslovnost">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
                     </button>
                   </div>
                 </div>
@@ -419,6 +431,19 @@
       </div>
       <button type="submit" class="btn btn-primary btn-full">Uložit změny</button>
     </form>
+  </div>
+
+  <!-- Grammar / Travel Tip Modal -->
+  <div id="tip-modal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Vysvětlení stavby věty">
+    <div class="card modal-card tip-modal-card">
+      <div class="show-card-top">
+        <h2>💡 Proč je věta takto?</h2>
+        <button type="button" class="icon-btn icon-btn-sm" id="tip-modal-close" aria-label="Zavřít">✕</button>
+      </div>
+      <div class="tip-modal-en" id="tip-modal-en"></div>
+      <div class="tip-modal-body" id="tip-modal-body"></div>
+      <button type="button" class="btn btn-primary btn-full" id="tip-modal-ok">Jasně, chápu!</button>
+    </div>
   </div>
 
   <!-- Toast Notification -->

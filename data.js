@@ -55,7 +55,7 @@ export const TOPIC_ILLUSTRATIONS = {
 
 /**
  * 30 praktických cestovatelských frází (6 pro každé z 5 témat)
- * Čistě český fonetický přepis bez speciálních znaků (IPA).
+ * Čistě český fonetický přepis + gramatický/cestovatelský tip.
  */
 export const INITIAL_PHRASES = [
   // 1. Kempování a cestování autem (6)
@@ -64,42 +64,48 @@ export const INITIAL_PHRASES = [
     topic: 'camping',
     cz: 'Mohli bychom dostat místo pro stan s elektřinou?',
     en: 'Could we get a pitch with electricity?',
-    phonetic: '[kud ví get e pič vis ilektrisiti?]'
+    phonetic: '[kud ví get e pič vis ilektrisiti?]',
+    tip: '„Could we…?“ (Mohli bychom…?) je zdvořilejší než „Can we…?“. Slovo „pitch“ znamená v kempu parcelu pro stan nebo obytné auto.'
   },
   {
     id: 'init-camp-2',
     topic: 'camping',
     cz: 'Kde se dá vypustit odpadní voda z karavanu?',
     en: 'Where can we empty the grey water?',
-    phonetic: '[vér ken ví empty de grej vótr?]'
+    phonetic: '[vér ken ví empty de grej vótr?]',
+    tip: 'V otázce stojí „can“ před „we“ (Where can we = Kde můžeme). „Grey water“ je šedá odpadní voda ze sprchy a dřezu.'
   },
   {
     id: 'init-camp-3',
     topic: 'camping',
     cz: 'Je tu pitná voda k doplnění nádrže?',
     en: 'Is there drinking water to fill the tank?',
-    phonetic: '[iz dér drinkin vótr tu fil de tenk?]'
+    phonetic: '[iz dér drinkin vótr tu fil de tenk?]',
+    tip: '„Is there…?“ znamená „Je tady…?“. Vazba „to fill“ (abychom naplnili) vyjadřuje účel — angličtina tu dává „to + sloveso“.'
   },
   {
     id: 'init-camp-4',
     topic: 'camping',
     cz: 'Potřebujeme plnou nádrž benzínu, prosím.',
     en: 'We need a full tank of petrol, please.',
-    phonetic: '[ví níd e ful tenk of petrol, plíz.]'
+    phonetic: '[ví níd e ful tenk of petrol, plíz.]',
+    tip: 'Slovosled v oznamovací větě je pevný: Kdo (We) + co dělá (need) + co (a full tank of petrol). V USA se místo „petrol“ říká „gas“.'
   },
   {
     id: 'init-camp-5',
     topic: 'camping',
     cz: 'Smíme tady přespat na jednu noc?',
     en: 'Are we allowed to stay overnight here?',
-    phonetic: '[ár ví elaud tu stej ouvrnajt hír?]'
+    phonetic: '[ár ví elaud tu stej ouvrnajt hír?]',
+    tip: '„Are we allowed to…?“ = „Smíme…? / Máme dovoleno…?“. Místo (here) patří v angličtině vždy až na konec věty.'
   },
   {
     id: 'init-camp-6',
     topic: 'camping',
     cz: 'Kde najdeme sprchy a záchody?',
     en: 'Where can we find the showers and toilets?',
-    phonetic: '[vér ken ví fajnd de šaurz end tojlits?]'
+    phonetic: '[vér ken ví fajnd de šaurz end tojlits?]',
+    tip: 'Člen „the“ tu znamená konkrétní sprchy a záchody v tomto kempu. Množné číslo se tvoří jednoduše koncovkou -s.'
   },
 
   // 2. Restaurace a jídlo (6)
@@ -108,42 +114,48 @@ export const INITIAL_PHRASES = [
     topic: 'restaurant',
     cz: 'Měli bychom zájem o stůl pro dva venku.',
     en: 'We would like a table for two outside.',
-    phonetic: '[ví vud lajk e tejbl fór tú autsajd.]'
+    phonetic: '[ví vud lajk e tejbl fór tú autsajd.]',
+    tip: '„We would like…“ (Rádi bychom…) je nejlepší univerzální fráze do restaurace. Určení místa „outside“ stojí až na konci.'
   },
   {
     id: 'init-rest-2',
     topic: 'restaurant',
     cz: 'Můžeme dostat jídelní lístek v angličtině?',
     en: 'Can we have the menu in English, please?',
-    phonetic: '[ken ví hev de menjú in ingliš, plíz?]'
+    phonetic: '[ken ví hev de menjú in ingliš, plíz?]',
+    tip: 'V restauraci angličtina nepoužívá „give us“ (dejte nám), ale zdvořilé „Can we have…?“ (Můžeme mít/dostat…?).'
   },
   {
     id: 'init-rest-3',
     topic: 'restaurant',
     cz: 'Co byste nám doporučil z místních jídel?',
     en: 'What local dish would you recommend?',
-    phonetic: '[vot loukl diš vud jů rekomend?]'
+    phonetic: '[vot loukl diš vud jů rekomend?]',
+    tip: 'Přídavné jméno „local“ (místní) stojí vždy před podstatným jménem „dish“ (jídlo/chod). „Would you“ = byste.'
   },
   {
     id: 'init-rest-4',
     topic: 'restaurant',
     cz: 'Poprosíme účet, budeme platit kartou.',
     en: 'Could we have the bill? We will pay by card.',
-    phonetic: '[kud ví hev de bil? ví vil pej baj kárd.]'
+    phonetic: '[kud ví hev de bil? ví vil pej baj kárd.]',
+    tip: 'Placení kartou se říká „by card“, ale hotově „in cash“. V USA se účtu v restauraci častěji říká „the check“.'
   },
   {
     id: 'init-rest-5',
     topic: 'restaurant',
     cz: 'Jsem alergický na ořechy, je to v tom jídle?',
     en: 'I am allergic to nuts, is it in this dish?',
-    phonetic: '[aj em elérdžik tu nats, iz it in dis diš?]'
+    phonetic: '[aj em elérdžik tu nats, iz it in dis diš?]',
+    tip: 'Po slově „allergic“ se v angličtině vždy pojí předložka „to“ (doslova alergický „k“ ořechům).'
   },
   {
     id: 'init-rest-6',
     topic: 'restaurant',
     cz: 'Dáme si dvě kávy s sebou, prosím.',
     en: 'Two coffees to take away, please.',
-    phonetic: '[tú kofíz tu tejk evej, plíz.]'
+    phonetic: '[tú kofíz tu tejk evej, plíz.]',
+    tip: '„To take away“ (s sebou) je běžné v Evropě a Británii; v USA uslyšíš spíše kratší „to go“.'
   },
 
   // 3. Nákupy (6)
@@ -152,42 +164,48 @@ export const INITIAL_PHRASES = [
     topic: 'shopping',
     cz: 'Kolik tohle stojí dohromady?',
     en: 'How much does this cost altogether?',
-    phonetic: '[hau mač daz dis kost óltugedr?]'
+    phonetic: '[hau mač daz dis kost óltugedr?]',
+    tip: 'Na cenu se vždy ptáme „How much…?“ (Kolik). Protože „this“ je jednotné číslo, pomocné sloveso je „does“.'
   },
   {
     id: 'init-shop-2',
     topic: 'shopping',
     cz: 'Máte tohle ve větší velikosti?',
     en: 'Do you have this in a larger size?',
-    phonetic: '[dú jů hev dis in e lárdžr sajz?]'
+    phonetic: '[dú jů hev dis in e lárdžr sajz?]',
+    tip: 'Otázku „Máte…?“ v angličtině tvoří pomocné „Do you have…?“ na začátku. Koncovka „-er“ u „larger“ znamená „větší“.'
   },
   {
     id: 'init-shop-3',
     topic: 'shopping',
     cz: 'Jen se dívám, děkuji za pomoc.',
     en: 'I am just looking, thank you for your help.',
-    phonetic: '[aj em džast lukin, senk jů fór jór help.]'
+    phonetic: '[aj em džast lukin, senk jů fór jór help.]',
+    tip: 'Tvar „I am looking“ (průběhový čas s -ing) vyjadřuje, že se díváš právě teď v tuto chvíli.'
   },
   {
     id: 'init-shop-4',
     topic: 'shopping',
     cz: 'Berete bezkontaktní karty nebo jen hotovost?',
     en: 'Do you take contactless cards or only cash?',
-    phonetic: '[dú jů tejk kontektles kárdz ór ounli keš?]'
+    phonetic: '[dú jů tejk kontektles kárdz ór ounli keš?]',
+    tip: 'Sloveso „take“ se v obchodech běžně používá ve významu „přijímat/brát“ (platbu). Můžeš říct i „accept“.'
   },
   {
     id: 'init-shop-5',
     topic: 'shopping',
     cz: 'Můžu dostat účtenku a tašku, prosím?',
     en: 'Could I get a receipt and a bag, please?',
-    phonetic: '[kud aj get e risít end e beg, plíz?]'
+    phonetic: '[kud aj get e risít end e beg, plíz?]',
+    tip: 'Pozor na slovo „receipt“ (účtenka) — písmeno „p“ se vůbec nevyslovuje! Čte se jednoduše [risít].'
   },
   {
     id: 'init-shop-6',
     topic: 'shopping',
     cz: 'Kde najdu nejbližší obchod s potravinami?',
     en: 'Where is the nearest grocery store?',
-    phonetic: '[vér iz de nírist grousri stór?]'
+    phonetic: '[vér iz de nírist grousri stór?]',
+    tip: 'Před 3. stupněm přídavného jména (nearest = nejbližší) je v angličtině vždy člen „the“.'
   },
 
   // 4. Letiště a navigace (6)
@@ -196,42 +214,48 @@ export const INITIAL_PHRASES = [
     topic: 'airport',
     cz: 'Kde je odbavení pro tento let?',
     en: 'Where is the check-in desk for this flight?',
-    phonetic: '[vér iz de ček-in desk fór dis flajt?]'
+    phonetic: '[vér iz de ček-in desk fór dis flajt?]',
+    tip: '„Check-in desk“ je odbavovací přepážka. „This“ označuje věc blízko/tento konkrétní let.'
   },
   {
     id: 'init-air-2',
     topic: 'airport',
     cz: 'Kterým směrem je nástupní brána číslo pět?',
     en: 'Which way is boarding gate number five?',
-    phonetic: '[vič vej iz bórdin gejt nambr fajv?]'
+    phonetic: '[vič vej iz bórdin gejt nambr fajv?]',
+    tip: '„Which way is…?“ (Kterým směrem je…?) je super rychlá fráze, když hledáš cestu na letišti nebo ve městě.'
   },
   {
     id: 'init-air-3',
     topic: 'airport',
     cz: 'Jede tenhle autobus do centra města?',
     en: 'Does this bus go to the city centre?',
-    phonetic: '[daz dis bas gou tu de siti sentr?]'
+    phonetic: '[daz dis bas gou tu de siti sentr?]',
+    tip: 'Pro 3. osobu (this bus = on) začíná otázka „Does“, a hlavní sloveso „go“ už zůstává v základním tvaru bez -s.'
   },
   {
     id: 'init-air-4',
     topic: 'airport',
     cz: 'Můžete mi to ukázat na mapě, prosím?',
     en: 'Could you show me on the map, please?',
-    phonetic: '[kud jů šou mí on de mep, plíz?]'
+    phonetic: '[kud jů šou mí on de mep, plíz?]',
+    tip: '„Could you…?“ (Mohl byste…?) + základní tvar slovesa (show). S mapou se pojí předložka „on“ (on the map = na mapě).'
   },
   {
     id: 'init-air-5',
     topic: 'airport',
     cz: 'Kolik času trvá cesta pěšky na nádraží?',
     en: 'How long does it take to walk to the station?',
-    phonetic: '[hau long daz it tejk tu vók tu de stejšn?]'
+    phonetic: '[hau long daz it tejk tu vók tu de stejšn?]',
+    tip: 'Ustálená vazba „How long does it take to…?“ znamená „Jak dlouho trvá…?“. Skvěle se hodí pro chůzi i jízdu autem.'
   },
   {
     id: 'init-air-6',
     topic: 'airport',
     cz: 'Potřebuji si koupit zpáteční jízdenku.',
     en: 'I need to buy a return ticket.',
-    phonetic: '[aj níd tu baj e ritérn tikit.]'
+    phonetic: '[aj níd tu baj e ritérn tikit.]',
+    tip: 'Po „need“ následuje „to + sloveso“ (need to buy = potřebuji koupit). Jednosměrná jízdenka je „single“ nebo „one-way“.'
   },
 
   // 5. Řešení problémů (6)
@@ -240,54 +264,61 @@ export const INITIAL_PHRASES = [
     topic: 'problems',
     cz: 'Promiňte, ale tohle nefunguje správně.',
     en: 'Excuse me, but this is not working properly.',
-    phonetic: '[ikskjúz mí, bat dis iz not vérkin proprli.]'
+    phonetic: '[ikskjúz mí, bat dis iz not vérkin proprli.]',
+    tip: '„Excuse me“ slouží k upoutání pozornosti (Promiňte), zatímco „Sorry“ je omluva. „Is not working“ = zrovna nefunguje.'
   },
   {
     id: 'init-prob-2',
     topic: 'problems',
     cz: 'Píchli jsme pneumatiku, potřebujeme odtah.',
     en: 'We have a flat tyre and need roadside assistance.',
-    phonetic: '[ví hev e flet tajr end níd roudsajd esistns.]'
+    phonetic: '[ví hev e flet tajr end níd roudsajd esistns.]',
+    tip: '„Flat tyre“ znamená doslova „plochá pneumatika“ (píchnuté kolo). „Roadside assistance“ je silniční asistenční služba.'
   },
   {
     id: 'init-prob-3',
     topic: 'problems',
     cz: 'Ztratil jsem kufr, kde ho můžu nahlásit?',
     en: 'I lost my suitcase, where can I report it?',
-    phonetic: '[aj lost maj sútkejs, vér ken aj ripórt it?]'
+    phonetic: '[aj lost maj sútkejs, vér ken aj ripórt it?]',
+    tip: '„Lost“ je minulý čas od „lose“ (ztratit). V druhé části je otázka, proto „can“ stojí před „I“ (where can I).'
   },
   {
     id: 'init-prob-4',
     topic: 'problems',
     cz: 'Můžete mi prosím napsat adresu na papír?',
     en: 'Could you write the address down for me, please?',
-    phonetic: '[kud jů rajt de edres daun fór mí, plíz?]'
+    phonetic: '[kud jů rajt de edres daun fór mí, plíz?]',
+    tip: '„Write down“ je frázové sloveso = „zapsat si“. Předmět (the address) může stát mezi „write“ a „down“.'
   },
   {
     id: 'init-prob-5',
     topic: 'problems',
     cz: 'Potřebuji lékárnu, mám horečku.',
     en: 'I need a pharmacy, I have a fever.',
-    phonetic: '[aj níd e fármesi, aj hev e fívr.]'
+    phonetic: '[aj níd e fármesi, aj hev e fívr.]',
+    tip: 'U nemocí a příznaků jako horečka (a fever) nebo bolest hlavy (a headache) angličtina používá neurčitý člen „a“.'
   },
   {
     id: 'init-prob-6',
     topic: 'problems',
     cz: 'Můžeme si pokoj vyměnit za tišší?',
     en: 'Could we change to a quieter room?',
-    phonetic: '[kud ví čejndž tu e kvajtr rúm?]'
+    phonetic: '[kud ví čejndž tu e kvajtr rúm?]',
+    tip: '„Change to“ znamená „přesunout se / změnit na“. Koncovka „-er“ u „quieter“ tvoří 2. stupeň (tišší).'
   }
 ];
 
 /**
  * Interaktivní šablony pro Stavebnici (režim Šablony).
- * Čistě český fonetický přepis bez speciálních znaků.
+ * Každá šablona obsahuje i vysvětlení stavby věty (tip).
  */
 export const SENTENCE_TEMPLATES = [
   // Kempování a cestování autem
   {
     id: 'tpl-camp-1',
     topic: 'camping',
+    tip: '„Could we get…?“ je zdvořilá žádost (Mohli bychom dostat…?). Na konec věty jednoduše přidáš požadavek: s elektřinou, u pláže nebo ve stínu.',
     parts: [
       { type: 'text', en: 'Could we get a pitch ', cz: 'Mohli bychom dostat místo ', phonetic: 'kud ví get e pič ' },
       {
@@ -304,6 +335,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-camp-2',
     topic: 'camping',
+    tip: '„We are staying for…“ používá průběhový čas pro naplánovaný pobyt. Předložka „for“ vyjadřuje délku pobytu (na dvě noci / na týden).',
     parts: [
       { type: 'text', en: 'We are staying for ', cz: 'Zůstáváme na ', phonetic: 'ví ár stej-in fór ' },
       {
@@ -329,6 +361,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-camp-3',
     topic: 'camping',
+    tip: 'V otázce „Where can we…?“ (Kde můžeme…?) se prohodí pořadí „we can“ na „can we“ a pak následuje čisté sloveso (fill up / plug in / park).',
     parts: [
       { type: 'text', en: 'Where can we ', cz: 'Kde můžeme ', phonetic: 'vér ken ví ' },
       {
@@ -347,6 +380,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-rest-1',
     topic: 'restaurant',
+    tip: '„Could we have a table…?“ je nejpřirozenější způsob, jak požádat o stůl. Počet osob (for two) dáváme hned za „table“, umístění (outside) až na konec.',
     parts: [
       { type: 'text', en: 'Could we have a table ', cz: 'Mohli bychom dostat stůl ', phonetic: 'kud ví hev e tejbl ' },
       {
@@ -372,6 +406,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-rest-2',
     topic: 'restaurant',
+    tip: '„I would like…“ (Dal bych si…) je vždy zdvořilé (nikdy neříkej jen „I want“). Předložka „without“ znamená „bez“.',
     parts: [
       { type: 'text', en: 'I would like ', cz: 'Dal bych si ', phonetic: 'aj vud lajk ' },
       {
@@ -397,6 +432,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-rest-3',
     topic: 'restaurant',
+    tip: 'Všimni si rozdílu předložek: kartou je vždy „by card“, hotově „in cash“ a zvlášť je příslovce „separately“ bez předložky.',
     parts: [
       { type: 'text', en: 'Can we pay ', cz: 'Můžeme zaplatit ', phonetic: 'ken ví pej ' },
       {
@@ -415,6 +451,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-shop-1',
     topic: 'shopping',
+    tip: 'Otázka „Do you have…?“ (Máte…?) potřebuje pomocné „Do“ na začátku. Velikost i barva se v angličtině pojí s předložkou „in“.',
     parts: [
       { type: 'text', en: 'Do you have this in ', cz: 'Máte tohle v ', phonetic: 'dú jů hev dis in ' },
       {
@@ -431,6 +468,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-shop-2',
     topic: 'shopping',
+    tip: '„How much is…?“ používáme pro jednu věc (jednotné číslo). Pokud se ptáš na více věcí najednou, řekneš „How much are…?“. ',
     parts: [
       { type: 'text', en: 'How much is ', cz: 'Kolik stojí ', phonetic: 'hau mač iz ' },
       {
@@ -447,6 +485,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-shop-3',
     topic: 'shopping',
+    tip: '„Can I…?“ (Můžu si…?) + základní tvar slovesa. „Try on“ znamená vyzkoušet si oblečení — „this“ se vkládá mezi „try“ a „on“.',
     parts: [
       { type: 'text', en: 'Can I ', cz: 'Můžu si ', phonetic: 'ken aj ' },
       {
@@ -465,6 +504,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-air-1',
     topic: 'airport',
+    tip: '„How do I get to…?“ (Jak se dostanu do/na…?) je nejlepší navigační věta. Sloveso „get to“ znamená „dostat se někam“.',
     parts: [
       { type: 'text', en: 'Excuse me, how do I get to ', cz: 'Promiňte, jak se dostanu na ', phonetic: 'ikskjúz mí, hau dú aj get tu ' },
       {
@@ -481,6 +521,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-air-2',
     topic: 'airport',
+    tip: 'Na jízdní řády se ptáme přítomným časem s „does“ (protože bus/train/ferry je jednotné číslo). Sloveso „leave“ (odjíždět) stojí na konci.',
     parts: [
       { type: 'text', en: 'When does the next ', cz: 'Kdy jede další ', phonetic: 'ven daz de nekst ' },
       {
@@ -497,6 +538,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-air-3',
     topic: 'airport',
+    tip: 'Otázka se slovesem „být“ (is) se tvoří jednoduše prohozením: „This seat is free“ → „Is this seat free?“.',
     parts: [
       { type: 'text', en: 'Is this seat ', cz: 'Je tohle místo ', phonetic: 'iz dis sít ' },
       {
@@ -515,6 +557,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-prob-1',
     topic: 'problems',
+    tip: '„Is not working“ (nefunguje) má na konci -ing, protože popisuje aktuální poruchu právě teď. Zkráceně lze říct i „isn’t working“.',
     parts: [
       { type: 'text', en: 'Sorry, ', cz: 'Promiňte, ', phonetic: 'sori, ' },
       {
@@ -531,6 +574,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-prob-2',
     topic: 'problems',
+    tip: '„Could you speak…?“ (Mohl byste mluvit…?) je velmi zdvořilá prosba. „More slowly“ = pomaleji, „a bit louder“ = trochu hlasitěji.',
     parts: [
       { type: 'text', en: 'Could you speak ', cz: 'Mohl byste mluvit ', phonetic: 'kud jů spík ' },
       {
@@ -547,6 +591,7 @@ export const SENTENCE_TEMPLATES = [
   {
     id: 'tpl-prob-3',
     topic: 'problems',
+    tip: '„I need help with…“ (Potřebuji pomoc s…) je jedna z nejužitečnějších nouzových vět. „Luggage“ (zavazadlo) je nepočitatelné — nikdy nemá -s.',
     parts: [
       { type: 'text', en: 'I need help with ', cz: 'Potřebuji pomoc s ', phonetic: 'aj níd help vis ' },
       {

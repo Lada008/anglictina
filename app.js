@@ -147,13 +147,20 @@ function loadState() {
       parsed.stats.streak = 0;
     }
 
-    // Aktualizace fonetického přepisu na čistou češtinu u výchozích frází
-    const initMap = new Map(INITIAL_PHRASES.map((p) => [p.id, p.phonetic]));
+    // Aktualizace fonetického přepisu na čistou češtinu + doplnění tipů u výchozích frází
+    const initMap = new Map(INITIAL_PHRASES.map((p) => [p.id, p]));
     let migrated = false;
     parsed.cards.forEach((c) => {
-      if (initMap.has(c.id) && c.phonetic !== initMap.get(c.id)) {
-        c.phonetic = initMap.get(c.id);
-        migrated = true;
+      const def = initMap.get(c.id);
+      if (def) {
+        if (c.phonetic !== def.phonetic) {
+          c.phonetic = def.phonetic;
+          migrated = true;
+        }
+        if (!c.tip && def.tip) {
+          c.tip = def.tip;
+          migrated = true;
+        }
       } else if (c.phonetic && /[ðəθ]/.test(c.phonetic)) {
         c.phonetic = c.phonetic.replace(/ðə/g, 'de').replace(/ð/g, 'd').replace(/ə/g, 'e').replace(/θ/g, 's');
         migrated = true;
@@ -286,6 +293,26 @@ document.getElementById('show-modal-speak').addEventListener('click', (e) => {
 });
 document.getElementById('show-modal-slow').addEventListener('click', (e) => {
   if (currentShowEn) speakEnglish(currentShowEn, e.currentTarget, 0.62);
+});
+
+// --- Grammar / Travel Tip Modal ---
+const DEFAULT_TIP =
+  'V angličtině má věta pevný slovosled: Kdo + sloveso + co + místo/čas. U otázek se pomocné sloveso (Can, Could, Do, Does, Is) přesouvá před podmět.';
+
+function openTipModal(en, tip) {
+  document.getElementById('tip-modal-en').textContent = en;
+  document.getElementById('tip-modal-body').textContent = tip || DEFAULT_TIP;
+  document.getElementById('tip-modal').hidden = false;
+}
+
+function closeTipModal() {
+  document.getElementById('tip-modal').hidden = true;
+}
+
+document.getElementById('tip-modal-close').addEventListener('click', closeTipModal);
+document.getElementById('tip-modal-ok').addEventListener('click', closeTipModal);
+document.getElementById('tip-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'tip-modal') closeTipModal();
 });
 
 // --- App UI State ---
@@ -429,7 +456,7 @@ function renderTemplate() {
   const tpl = list[ui.tplIndex];
   const topicMeta = getTopicMeta(tpl.topic);
 
-  document.getElementById('tpl-topic-badge').textContent = `${topicMeta.icon} ${topicMeta.label}`;
+  document.getElementById('tpl-topic-badge').textContent = `${topicMeta.icon} ${topicMeta.shortLabel}`;
   document.getElementById('tpl-counter').textContent = `${ui.tplIndex + 1} / ${list.length}`;
   const tplIll = document.getElementById('tpl-illustration');
   if (tplIll) tplIll.innerHTML = TOPIC_ILLUSTRATIONS[tpl.topic] || TOPIC_ILLUSTRATIONS.camping;
@@ -487,7 +514,15 @@ function renderTemplate() {
   const res = buildTemplateResult(tpl);
   document.getElementById('tpl-cz-text').textContent = res.cz;
   document.getElementById('tpl-phonetic-text').textContent = res.phonetic;
+  const tipPrev = document.getElementById('tpl-tip-preview');
+  if (tipPrev) tipPrev.textContent = tpl.tip || 'Proč je věta takto poskládaná?';
 }
+
+document.getElementById('tpl-tip-btn').addEventListener('click', () => {
+  const tpl = getFilteredTemplates()[ui.tplIndex];
+  if (!tpl) return;
+  openTipModal(buildTemplateResult(tpl).en, tpl.tip);
+});
 
 document.getElementById('tpl-prev-btn').addEventListener('click', () => {
   ui.tplIndex--;
@@ -539,6 +574,7 @@ document.getElementById('tpl-save-btn').addEventListener('click', () => {
     cz: res.cz,
     en: res.en,
     phonetic: res.phonetic,
+    tip: tpl.tip || '',
     interval: 0,
     reps: 0,
     dueDate: todayISO()
@@ -571,7 +607,7 @@ function setupPuzzle() {
   const phrase = list[ui.puzIndex];
   const topicMeta = getTopicMeta(phrase.topic);
 
-  document.getElementById('puz-topic-badge').textContent = `${topicMeta.icon} ${topicMeta.label}`;
+  document.getElementById('puz-topic-badge').textContent = `${topicMeta.icon} ${topicMeta.shortLabel}`;
   document.getElementById('puz-counter').textContent = `${ui.puzIndex + 1} / ${list.length}`;
   document.getElementById('puz-cz-text').textContent = phrase.cz;
   const puzIll = document.getElementById('puz-illustration');
@@ -626,12 +662,17 @@ function renderPuzzleBoard() {
     bankEl.appendChild(btn);
   });
 
+  const solvedTipBtn = document.getElementById('puz-solved-tip-btn');
   if (ui.puzSolved) {
     feedbackEl.className = 'puzzle-feedback ok';
     feedbackEl.textContent = '✅ Výborně! Věta je správně.';
-  } else if (ui.puzPlaced.length === 0) {
-    feedbackEl.className = 'puzzle-feedback';
-    feedbackEl.textContent = '';
+    if (solvedTipBtn) solvedTipBtn.hidden = false;
+  } else {
+    if (solvedTipBtn) solvedTipBtn.hidden = true;
+    if (ui.puzPlaced.length === 0) {
+      feedbackEl.className = 'puzzle-feedback';
+      feedbackEl.textContent = '';
+    }
   }
 }
 
@@ -686,6 +727,13 @@ document.getElementById('puz-speak-btn').addEventListener('click', (e) => {
   const phrase = getFilteredPuzzlePhrases()[ui.puzIndex];
   if (phrase) speakEnglish(phrase.en, e.currentTarget, 0.9);
 });
+
+function openCurrentPuzzleTip() {
+  const phrase = getFilteredPuzzlePhrases()[ui.puzIndex];
+  if (phrase) openTipModal(phrase.en, phrase.tip);
+}
+document.getElementById('puz-tip-btn').addEventListener('click', openCurrentPuzzleTip);
+document.getElementById('puz-solved-tip-btn').addEventListener('click', openCurrentPuzzleTip);
 
 // ==========================================
 // TAB 2: KARTIČKY (SRS + SWIPE)
@@ -904,6 +952,12 @@ document.getElementById('card-show-btn').addEventListener('click', (e) => {
   e.stopPropagation();
   const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
   if (card) openShowModal(card.en, card.cz);
+});
+
+document.getElementById('card-tip-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const card = state.cards.find((c) => c.id === ui.srsQueue[0]);
+  if (card) openTipModal(card.en, card.tip);
 });
 
 document.querySelectorAll('.srs-btn').forEach((btn) => {
