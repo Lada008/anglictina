@@ -166,6 +166,16 @@
       <!-- 2. TAB: KARTIČKY (SRS) -->
       <section id="view-cards" class="view" aria-label="Kartičky" hidden>
         <div class="srs-top-bar">
+          <div class="daily-goal-bar">
+            <span class="daily-goal-label" id="daily-goal-label">🎯 Denní cíl: <strong>0 / 10</strong></span>
+            <select id="daily-goal-select" class="compact-select" aria-label="Nastavit denní cíl učení">
+              <option value="5">Cíl: 5 / den</option>
+              <option value="10" selected>Cíl: 10 / den</option>
+              <option value="15">Cíl: 15 / den</option>
+              <option value="20">Cíl: 20 / den</option>
+              <option value="30">Cíl: 30 / den</option>
+            </select>
+          </div>
           <div class="srs-stats">
             <span class="srs-due-label">Zbývá pro dnešek: <strong id="srs-remaining">0</strong></span>
             <span class="srs-total-label" id="srs-total-cards">Celkem 30 karet</span>
@@ -243,6 +253,7 @@
               <span class="srs-btn-sub" id="srs-good-interval">za 3 dny</span>
             </button>
           </div>
+          <div class="pc-shortcuts-hint">Klávesové zkratky na PC: Mezerník = otočit · 1 = Znovu · 2 = Těžké · 3 = Umím</div>
         </div>
 
         <!-- Done for today state -->
@@ -358,11 +369,12 @@
 
       <!-- 4. TAB: SLOVÍČKA A SDÍLENÍ -->
       <section id="view-vocab" class="view" aria-label="Slovíčka a sdílení" hidden>
-        <!-- Sub-navigation pills inside Tab 3 -->
+        <!-- Sub-navigation pills inside Tab 4 -->
         <div class="segmented-control" role="tablist">
-          <button type="button" class="seg-btn active" data-vtab="list">📚 Přehled</button>
+          <button type="button" class="seg-btn active" data-vtab="list">📚 Moje</button>
+          <button type="button" class="seg-btn" data-vtab="dict">📖 2 000 slov</button>
           <button type="button" class="seg-btn" data-vtab="add">➕ Přidat</button>
-          <button type="button" class="seg-btn" data-vtab="share">📤 Sdílet &amp; Záloha</button>
+          <button type="button" class="seg-btn" data-vtab="share">📤 Sdílet</button>
         </div>
 
         <!-- Sub-view 1: List & Search -->
@@ -378,6 +390,25 @@
             </select>
           </div>
           <div id="vocab-list" class="vocab-list"></div>
+        </div>
+
+        <!-- Sub-view 1B: 2000-word Vocabulary (VOCABULARY from data.js) -->
+        <div id="vtab-dict" class="vtab-panel" hidden>
+          <div class="search-box">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="search" id="dict-search" placeholder="Hledat ve 2 000 slovíčkách (EN / CZ)…" autocomplete="off" />
+          </div>
+          <div class="vocab-count-row">
+            <span id="dict-count-label">2 000 slov</span>
+            <select id="dict-topic-filter" class="compact-select" aria-label="Filtrovat slovník podle tématu">
+              <option value="all">Všechna témata</option>
+            </select>
+          </div>
+          <div class="dict-bulk-row">
+            <button type="button" class="btn btn-secondary btn-full" id="dict-add-10-btn">+ Přidat 10 nových slovíček z výběru do Kartiček</button>
+          </div>
+          <div id="dict-list" class="vocab-list"></div>
+          <button type="button" class="btn btn-secondary btn-full" id="dict-load-more-btn" hidden>Načíst další slovíčka</button>
         </div>
 
         <!-- Sub-view 2: Add New Phrase -->

@@ -61,6 +61,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -2136,4 +2140,164 @@ textarea:focus {
   display: flex;
   gap: 8px;
   margin-top: 4px;
+}
+
+/* Daily Goal Bar & Dict Bulk Row */
+.daily-goal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.daily-goal-label {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.daily-goal-bar.goal-met {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+
+.dict-bulk-row {
+  margin-bottom: 10px;
+}
+
+#dict-load-more-btn {
+  margin-top: 10px;
+}
+
+.pc-shortcuts-hint {
+  display: none;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* ==========================================
+   PC / DESKTOP RESPONZIVNÍ VERZE (>= 860px)
+   ========================================== */
+@media (min-width: 860px) {
+  body {
+    padding: 0;
+    background: var(--bg);
+  }
+
+  .app-shell {
+    max-width: 1120px;
+    width: 100%;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "header header"
+      "nav main";
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  .app-header {
+    grid-area: header;
+    padding: 12px 24px;
+  }
+
+  .app-subtitle {
+    display: block;
+    font-size: 0.78rem;
+  }
+
+  .brand-badge {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .app-title {
+    font-size: 1.15rem;
+  }
+
+  /* Transform bottom bar into sleek left sidebar on PC */
+  .bottom-nav {
+    grid-area: nav;
+    position: sticky;
+    top: 66px;
+    bottom: auto;
+    height: calc(100dvh - 66px);
+    max-width: none;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 18px 14px;
+    border-top: none;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .nav-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    border-radius: 12px;
+  }
+
+  .nav-item:hover {
+    background: var(--surface-soft);
+  }
+
+  .nav-item.active {
+    background: var(--primary-soft);
+    color: var(--primary-text);
+  }
+
+  .app-main {
+    grid-area: main;
+    padding: 22px 28px 36px;
+    overflow-y: auto;
+  }
+
+  /* Center Stavebnice & Kartičky ergonomically on PC */
+  #view-builder,
+  #view-cards {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .flashcard-inner {
+    min-height: 360px;
+  }
+
+  .pc-shortcuts-hint {
+    display: block;
+  }
+
+  /* Multi-column grids for Slovíčka & 2000-word dictionary on PC */
+  .vocab-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .pack-words-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .progress-map {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 }

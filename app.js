@@ -1,4 +1,4 @@
-import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES, TOPIC_ILLUSTRATIONS } from './data.js';
+import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES, TOPIC_ILLUSTRATIONS, VOCABULARY } from './data.js';
 import { VOCAB_PACKS, TOTAL_VOCAB_COUNT } from './vocab-bank.js';
 
 const STORAGE_KEY = 'ticha_anglictina_v1';
@@ -108,6 +108,7 @@ function createInitialState() {
     stats: {
       xp: 0,
       streak: 0,
+      dailyGoal: 10,
       lastReviewDate: null,
       reviewedToday: 0,
       reviewedDate: today
@@ -141,6 +142,9 @@ function loadState() {
     if (typeof parsed.stats.xp !== 'number') {
       parsed.stats.xp = 0;
     }
+    if (typeof parsed.stats.dailyGoal !== 'number') {
+      parsed.stats.dailyGoal = 10;
+    }
     if (!parsed.theme) {
       parsed.theme = 'light';
     }
@@ -154,8 +158,9 @@ function loadState() {
       parsed.stats.streak = 0;
     }
 
-    // Aktualizace fonetického přepisu na čistou češtinu + doplnění tipů u výchozích frází
+    // Aktualizace fonetického přepisu na čistou češtinu + doplnění tipů a nových extra frází
     const initMap = new Map(INITIAL_PHRASES.map((p) => [p.id, p]));
+    const existingIds = new Set(parsed.cards.map((c) => c.id));
     let migrated = false;
     parsed.cards.forEach((c) => {
       const def = initMap.get(c.id);
@@ -170,6 +175,19 @@ function loadState() {
         }
       } else if (c.phonetic && /[ðəθ]/.test(c.phonetic)) {
         c.phonetic = c.phonetic.replace(/ðə/g, 'de').replace(/ð/g, 'd').replace(/ə/g, 'e').replace(/θ/g, 's');
+        migrated = true;
+      }
+    });
+    // Přidání nových rozšiřujících frází (ext-*), pokud je uživatel ještě nemá
+    const today = todayISO();
+    INITIAL_PHRASES.forEach((p) => {
+      if (p.id.startsWith('ext-') && !existingIds.has(p.id)) {
+        parsed.cards.push({
+          ...p,
+          interval: 0,
+          reps: 0,
+          dueDate: today
+        });
         migrated = true;
       }
     });
@@ -803,6 +821,29 @@ function getNextGoodInterval(card) {
   return Math.round(card.interval * 2.2);
 }
 
+function updateDailyGoalUI() {
+  const goal = state.stats?.dailyGoal || 10;
+  const done = state.stats?.reviewedToday || 0;
+  const label = document.getElementById('daily-goal-label');
+  const sel = document.getElementById('daily-goal-select');
+  const bar = label?.closest('.daily-goal-bar');
+  if (label) {
+    label.innerHTML =
+      done >= goal
+        ? `🏆 Denní cíl splněn: <strong>${done} / ${goal}</strong>`
+        : `🎯 Denní cíl: <strong>${done} / ${goal}</strong>`;
+  }
+  if (sel) sel.value = String(goal);
+  if (bar) bar.classList.toggle('goal-met', done >= goal);
+}
+
+document.getElementById('daily-goal-select').addEventListener('change', (e) => {
+  state.stats.dailyGoal = Number(e.target.value) || 10;
+  saveState();
+  updateDailyGoalUI();
+  showToast(`Denní cíl nastaven na ${state.stats.dailyGoal} karet denně 🎯`);
+});
+
 function recordReviewStat(xpGain = 10) {
   const today = todayISO();
   if (state.stats.reviewedDate !== today) {
@@ -811,6 +852,11 @@ function recordReviewStat(xpGain = 10) {
   }
   state.stats.reviewedToday += 1;
   state.stats.xp = (state.stats.xp || 0) + xpGain;
+
+  const goal = state.stats.dailyGoal || 10;
+  if (state.stats.reviewedToday === goal) {
+    showToast(`🏆 Skvělá práce! Dnešní cíl (${goal} karet) je splněn!`);
+  }
 
   if (state.stats.lastReviewDate !== today) {
     if (state.stats.lastReviewDate && daysDiffFromToday(state.stats.lastReviewDate) === -1) {
@@ -823,6 +869,7 @@ function recordReviewStat(xpGain = 10) {
 }
 
 function renderSrsCard() {
+  updateDailyGoalUI();
   const remaining = ui.srsQueue.length;
   document.getElementById('srs-remaining').textContent = String(remaining);
   document.getElementById('srs-total-cards').textContent = `Celkem ${state.cards.length} karet`;
@@ -1024,8 +1071,25 @@ document.getElementById('srs-go-builder-btn').addEventListener('click', () => {
   switchTab('builder');
 });
 
+// PC Keyboard Shortcuts for Kartičky
+document.addEventListener('keydown', (e) => {
+  if (ui.activeTab !== 'cards' || ui.srsQueue.length === 0) return;
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (!document.getElementById('mode-modal').hidden || !document.getElementById('guide-modal').hidden) return;
+
+  if (e.code === 'Space' && !ui.srsFlipped) {
+    e.preventDefault();
+    flipFlashcard();
+  } else if (ui.srsFlipped) {
+    if (e.key === '1') gradeCurrentCard('again');
+    else if (e.key === '2') gradeCurrentCard('hard');
+    else if (e.key === '3') gradeCurrentCard('good');
+  }
+});
+
 // ==========================================
-// TAB 3: SLOVÍČKA A SDÍLENÍ
+// TAB 4: SLOVÍČKA A SDÍLENÍ (+ 2000 SLOV Z DATA.JS)
 // ==========================================
 document.querySelectorAll('[data-vtab]').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -1034,24 +1098,128 @@ document.querySelectorAll('[data-vtab]').forEach((btn) => {
       b.classList.toggle('active', b.dataset.vtab === ui.vocabSubTab)
     );
     document.getElementById('vtab-list').hidden = ui.vocabSubTab !== 'list';
+    document.getElementById('vtab-dict').hidden = ui.vocabSubTab !== 'dict';
     document.getElementById('vtab-add').hidden = ui.vocabSubTab !== 'add';
     document.getElementById('vtab-share').hidden = ui.vocabSubTab !== 'share';
+    if (ui.vocabSubTab === 'dict') renderDictList(true);
   });
 });
 
 function populateTopicSelects() {
   const filterSel = document.getElementById('vocab-topic-filter');
+  const dictSel = document.getElementById('dict-topic-filter');
   const addSel = document.getElementById('add-topic');
   const shareSel = document.getElementById('share-topic-select');
   const editSel = document.getElementById('edit-topic');
 
   TOPICS.forEach((t) => {
     filterSel.add(new Option(`${t.icon} ${t.label}`, t.id));
+    if (dictSel) dictSel.add(new Option(`${t.icon} ${t.label}`, t.id));
     addSel.add(new Option(`${t.icon} ${t.label}`, t.id));
     shareSel.add(new Option(`${t.icon} ${t.label}`, t.id));
     editSel.add(new Option(`${t.icon} ${t.label}`, t.id));
   });
 }
+
+// --- 2 000 slov (VOCABULARY z data.js) v záložce Slovíčka ---
+let dictLimit = 50;
+
+function getFilteredDictWords() {
+  const q = (document.getElementById('dict-search')?.value || '').trim().toLowerCase();
+  const topicFilter = document.getElementById('dict-topic-filter')?.value || 'all';
+  return VOCABULARY.filter((w) => {
+    if (topicFilter !== 'all' && w.topic !== topicFilter) return false;
+    if (!q) return true;
+    return (
+      w.en.toLowerCase().includes(q) ||
+      w.cz.toLowerCase().includes(q) ||
+      (w.phonetic || '').toLowerCase().includes(q)
+    );
+  });
+}
+
+function renderDictList(resetLimit = false) {
+  if (resetLimit) dictLimit = 50;
+  const listEl = document.getElementById('dict-list');
+  const countEl = document.getElementById('dict-count-label');
+  const moreBtn = document.getElementById('dict-load-more-btn');
+  if (!listEl) return;
+
+  const filtered = getFilteredDictWords();
+  countEl.textContent = `${filtered.length.toLocaleString('cs-CZ')} z ${VOCABULARY.length.toLocaleString('cs-CZ')} slov`;
+
+  const slice = filtered.slice(0, dictLimit);
+  const existingSet = new Set(state.cards.map((c) => c.en.toLowerCase()));
+  listEl.innerHTML = '';
+
+  if (!slice.length) {
+    listEl.innerHTML = '<div class="card muted-text">Žádné slovíčko neodpovídá hledání.</div>';
+    moreBtn.hidden = true;
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  slice.forEach((w) => {
+    const topicMeta = getTopicMeta(w.topic);
+    const isAdded = existingSet.has(w.en.toLowerCase());
+    const el = document.createElement('article');
+    el.className = 'vocab-item';
+    el.innerHTML = `
+      <div class="vocab-item-top">
+        <span class="topic-tag">${topicMeta.icon} ${topicMeta.shortLabel}</span>
+        <div class="vocab-item-actions">
+          <button type="button" class="mini-btn dict-spk" title="Poslechnout">🔊</button>
+          <button type="button" class="mini-btn dict-add" ${isAdded ? 'disabled' : ''}>${isAdded ? '✓ V kartičkách' : '+ Do kartiček'}</button>
+        </div>
+      </div>
+      <div class="vocab-en"></div>
+      <div class="vocab-cz"></div>
+      ${w.phonetic ? '<div class="phonetic-text"></div>' : ''}
+    `;
+    el.querySelector('.vocab-en').textContent = w.en;
+    el.querySelector('.vocab-cz').textContent = w.cz;
+    if (w.phonetic) el.querySelector('.phonetic-text').textContent = w.phonetic;
+
+    el.querySelector('.dict-spk').addEventListener('click', (e) => speakEnglish(w.en, e.currentTarget, 0.9));
+    el.querySelector('.dict-add').addEventListener('click', (e) => {
+      if (addVocabWordToCards(w, w.topic)) {
+        existingSet.add(w.en.toLowerCase());
+        saveState();
+        e.currentTarget.textContent = '✓ V kartičkách';
+        e.currentTarget.disabled = true;
+        showToast(`„${w.en}“ přidáno do kartiček!`);
+      }
+    });
+    frag.appendChild(el);
+  });
+
+  listEl.appendChild(frag);
+  moreBtn.hidden = slice.length >= filtered.length;
+  moreBtn.textContent = `Načíst dalších 50 slovíček (zobrazeno ${slice.length} z ${filtered.length})`;
+}
+
+document.getElementById('dict-search').addEventListener('input', () => renderDictList(true));
+document.getElementById('dict-topic-filter').addEventListener('change', () => renderDictList(true));
+document.getElementById('dict-load-more-btn').addEventListener('click', () => {
+  dictLimit += 50;
+  renderDictList(false);
+});
+document.getElementById('dict-add-10-btn').addEventListener('click', () => {
+  const filtered = getFilteredDictWords();
+  let added = 0;
+  for (const w of filtered) {
+    if (added >= 10) break;
+    if (addVocabWordToCards(w, w.topic)) added++;
+  }
+  if (added > 0) {
+    saveState();
+    renderDictList(false);
+    renderVocabList();
+    showToast(`Přidáno ${added} nových slovíček do kartiček!`);
+  } else {
+    showToast('Všechna slovíčka z tohoto výběru už máš v kartičkách.');
+  }
+});
 
 function openEditModal(card) {
   document.getElementById('edit-id').value = card.id;

@@ -1,3 +1,16 @@
+import { EXTRA_PHRASES, EXTRA_TEMPLATES } from './extra_phrases_templates.js';
+import { VOCABULARY_PART_1 } from './vocabulary_part_1.js';
+import { VOCABULARY_PART_2 } from './vocabulary_part_2.js';
+import { VOCABULARY_PART_3 } from './vocabulary_part_3.js';
+import { VOCABULARY_PART_4 } from './vocabulary_part_4.js';
+
+export const VOCABULARY = [
+  ...VOCABULARY_PART_1,
+  ...VOCABULARY_PART_2,
+  ...VOCABULARY_PART_3,
+  ...VOCABULARY_PART_4
+];
+
 export const TOPICS = [
   { id: 'general', label: 'Běžná konverzace', shortLabel: 'Běžná mluva', icon: '💬' },
   { id: 'camping', label: 'Kempování a cestování autem', shortLabel: 'Kemp & auto', icon: '⛺' },
@@ -317,7 +330,8 @@ export const INITIAL_PHRASES = [
     en: 'Could we change to a quieter room?',
     phonetic: '[kud ví čejndž tu e kvajtr rúm?]',
     tip: '„Change to“ znamená „přesunout se / změnit na“. Koncovka „-er“ u „quieter“ tvoří 2. stupeň (tišší).'
-  }
+  },
+  ...EXTRA_PHRASES
 ];
 
 /**
@@ -686,5 +700,6 @@ export const SENTENCE_TEMPLATES = [
       },
       { type: 'text', en: '.', cz: '.', phonetic: '.' }
     ]
-  }
+  },
+  ...EXTRA_TEMPLATES
 ];
