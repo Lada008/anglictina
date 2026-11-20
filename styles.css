@@ -2820,3 +2820,53 @@ textarea:focus {
 .lt-feedback-row .lt-feedback {
   margin-bottom: 0;
 }
+
+/* ==========================================
+   3-SMĚRNÝ SWIPE (⬅️ NEVÍM, ⬆️ TĚŽKÉ, ➡️ VÍM) & VĚTŠÍ PÍSMO
+   ========================================== */
+[data-font="large"] {
+  font-size: 118%;
+}
+
+.flashcard-wrapper.flipped {
+  touch-action: none;
+}
+
+.swipe-indicator.swipe-up {
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  background: var(--warning);
+  color: #FFFFFF;
+}
+
+.swipe-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  border: 1.5px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.swipe-legend .leg-left {
+  color: var(--danger);
+}
+
+.swipe-legend .leg-up {
+  color: var(--coral-text);
+}
+
+.swipe-legend .leg-right {
+  color: var(--primary-text);
+}
+
+.srs-btn-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+}

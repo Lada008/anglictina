@@ -199,8 +199,9 @@
         <!-- Flashcard Stage -->
         <div id="srs-stage" class="srs-stage">
           <div class="flashcard-wrapper" id="flashcard" tabindex="0" role="button" aria-label="Klepnutím otočíš kartičku">
-            <div class="swipe-indicator swipe-left" id="swipe-left-badge">Znovu</div>
-            <div class="swipe-indicator swipe-right" id="swipe-right-badge">Umím ✓</div>
+            <div class="swipe-indicator swipe-left" id="swipe-left-badge">⬅️ Nevím</div>
+            <div class="swipe-indicator swipe-up" id="swipe-up-badge">⬆️ Těžké</div>
+            <div class="swipe-indicator swipe-right" id="swipe-right-badge">Vím ➡️</div>
             <div class="flashcard-inner">
               <!-- Front: Czech -->
               <div class="flashcard-face flashcard-front">
@@ -238,7 +239,11 @@
                   <div class="card-cz-reminder" id="card-cz-back"></div>
                 </div>
                 <div class="card-face-footer">
-                  <span class="tap-hint">Přejeď vlevo (Znovu) / vpravo (Umím) nebo klepni níže</span>
+                  <div class="swipe-legend" aria-hidden="true">
+                    <span class="leg-left">⬅️ Nevím</span>
+                    <span class="leg-up">⬆️ Těžké</span>
+                    <span class="leg-right">Vím ➡️</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -252,19 +257,22 @@
           <!-- Post-flip 3 SRS buttons -->
           <div id="srs-rate-wrap" class="srs-rate-wrap" hidden>
             <button type="button" class="srs-btn srs-again" data-grade="again">
-              <span class="srs-btn-title">Znovu</span>
+              <span class="srs-btn-arrow" aria-hidden="true">⬅️</span>
+              <span class="srs-btn-title">Nevím</span>
               <span class="srs-btn-sub">ještě dnes</span>
             </button>
             <button type="button" class="srs-btn srs-hard" data-grade="hard">
+              <span class="srs-btn-arrow" aria-hidden="true">⬆️</span>
               <span class="srs-btn-title">Těžké</span>
               <span class="srs-btn-sub">zítra</span>
             </button>
             <button type="button" class="srs-btn srs-good" data-grade="good">
-              <span class="srs-btn-title">Umím</span>
+              <span class="srs-btn-arrow" aria-hidden="true">➡️</span>
+              <span class="srs-btn-title">Vím</span>
               <span class="srs-btn-sub" id="srs-good-interval">za 3 dny</span>
             </button>
           </div>
-          <div class="pc-shortcuts-hint">Klávesové zkratky na PC: Mezerník = otočit · 1 = Znovu · 2 = Těžké · 3 = Umím</div>
+          <div class="pc-shortcuts-hint">Klávesy na PC: Mezerník = otočit · ⬅️ Nevím · ⬆️ Těžké · ➡️ Vím (nebo 1 / 2 / 3)</div>
         </div>
 
         <!-- Done for today state -->
@@ -584,6 +592,13 @@
         <div class="guide-item">
           <strong>🔧 Ikony v kartách</strong>
           <p><strong>📱</strong> Ukázat obsluze přes celý displej · <strong>🐢</strong> Pomalý poslech · <strong>🔊</strong> Normální poslech · <strong>💡</strong> Vysvětlení gramatiky · <strong>🌙</strong> Tmavý režim.</p>
+        </div>
+        <div class="guide-item mode-switch-box">
+          <strong>🔍 Velikost písma (pro pohodlnější čtení)</strong>
+          <div class="btn-grid-2">
+            <button type="button" class="btn btn-secondary active-mode" id="font-size-normal">Aa Normální</button>
+            <button type="button" class="btn btn-secondary" id="font-size-large">Aa+ Větší písmo</button>
+          </div>
         </div>
       </div>
       <button type="button" class="btn btn-secondary btn-full" id="guide-replay-tutorial">🎓 Spustit úvodního průvodce znovu</button>

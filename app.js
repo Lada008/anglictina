@@ -1142,8 +1142,10 @@ function renderSrsCard() {
 
   const flashcardEl = document.getElementById('flashcard');
   flashcardEl.style.transform = '';
+  flashcardEl.style.opacity = '';
   flashcardEl.style.transition = '';
   document.getElementById('swipe-left-badge').style.opacity = '0';
+  document.getElementById('swipe-up-badge').style.opacity = '0';
   document.getElementById('swipe-right-badge').style.opacity = '0';
   flashcardEl.classList.toggle('flipped', ui.srsFlipped);
   document.getElementById('srs-reveal-wrap').hidden = ui.srsFlipped;
@@ -1206,13 +1208,37 @@ flashcardEl.addEventListener('keydown', (e) => {
   }
 });
 
-// Touch Swipe Gestures on Flipped Card
+let isAnimatingGrade = false;
+function animateAndGrade(grade) {
+  if (isAnimatingGrade || !ui.srsFlipped) return;
+  isAnimatingGrade = true;
+
+  flashcardEl.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+  if (grade === 'again') {
+    document.getElementById('swipe-left-badge').style.opacity = '1';
+    flashcardEl.style.transform = 'translateX(-120%) rotate(-12deg)';
+  } else if (grade === 'hard') {
+    document.getElementById('swipe-up-badge').style.opacity = '1';
+    flashcardEl.style.transform = 'translateY(-110%) scale(0.92)';
+  } else {
+    document.getElementById('swipe-right-badge').style.opacity = '1';
+    flashcardEl.style.transform = 'translateX(120%) rotate(12deg)';
+  }
+  flashcardEl.style.opacity = '0';
+
+  setTimeout(() => {
+    isAnimatingGrade = false;
+    gradeCurrentCard(grade);
+  }, 190);
+}
+
+// 3-Way Touch Swipe Gestures on Flipped Card (Left = Nevím, Up = Těžké, Right = Vím)
 let touchStartX = 0;
 let touchStartY = 0;
 let swiping = false;
 
 flashcardEl.addEventListener('touchstart', (e) => {
-  if (!ui.srsFlipped || e.target.closest('.card-tool-btns')) return;
+  if (!ui.srsFlipped || isAnimatingGrade || e.target.closest('.card-tool-btns')) return;
   const t = e.touches[0];
   touchStartX = t.clientX;
   touchStartY = t.clientY;
@@ -1225,12 +1251,22 @@ flashcardEl.addEventListener('touchmove', (e) => {
   const t = e.touches[0];
   const dx = t.clientX - touchStartX;
   const dy = t.clientY - touchStartY;
-  if (Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 15) return;
 
-  flashcardEl.style.transform = `translateX(${dx}px) rotate(${dx * 0.04}deg)`;
-  const ratio = Math.min(1, Math.abs(dx) / 90);
-  document.getElementById('swipe-left-badge').style.opacity = dx < -15 ? String(ratio) : '0';
-  document.getElementById('swipe-right-badge').style.opacity = dx > 15 ? String(ratio) : '0';
+  const isUpSwipe = dy < -15 && Math.abs(dy) > Math.abs(dx) * 1.1;
+
+  if (isUpSwipe) {
+    const ratio = Math.min(1, Math.abs(dy) / 85);
+    flashcardEl.style.transform = `translateY(${dy}px) scale(${1 - ratio * 0.04})`;
+    document.getElementById('swipe-up-badge').style.opacity = String(ratio);
+    document.getElementById('swipe-left-badge').style.opacity = '0';
+    document.getElementById('swipe-right-badge').style.opacity = '0';
+  } else if (Math.abs(dx) >= 12) {
+    const ratio = Math.min(1, Math.abs(dx) / 85);
+    flashcardEl.style.transform = `translateX(${dx}px) rotate(${dx * 0.04}deg)`;
+    document.getElementById('swipe-left-badge').style.opacity = dx < -12 ? String(ratio) : '0';
+    document.getElementById('swipe-right-badge').style.opacity = dx > 12 ? String(ratio) : '0';
+    document.getElementById('swipe-up-badge').style.opacity = '0';
+  }
 }, { passive: true });
 
 flashcardEl.addEventListener('touchend', (e) => {
@@ -1238,15 +1274,19 @@ flashcardEl.addEventListener('touchend', (e) => {
   swiping = false;
   const t = e.changedTouches[0];
   const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
 
-  if (dx > 85) {
-    gradeCurrentCard('good');
-  } else if (dx < -85) {
-    gradeCurrentCard('again');
+  if (dy < -75 && Math.abs(dy) > Math.abs(dx) * 1.1) {
+    animateAndGrade('hard');
+  } else if (dx > 80) {
+    animateAndGrade('good');
+  } else if (dx < -80) {
+    animateAndGrade('again');
   } else {
     flashcardEl.style.transition = 'transform 0.2s ease';
     flashcardEl.style.transform = '';
     document.getElementById('swipe-left-badge').style.opacity = '0';
+    document.getElementById('swipe-up-badge').style.opacity = '0';
     document.getElementById('swipe-right-badge').style.opacity = '0';
   }
 }, { passive: true });
@@ -1278,7 +1318,7 @@ document.getElementById('card-tip-btn').addEventListener('click', (e) => {
 });
 
 document.querySelectorAll('.srs-btn').forEach((btn) => {
-  btn.addEventListener('click', () => gradeCurrentCard(btn.dataset.grade));
+  btn.addEventListener('click', () => animateAndGrade(btn.dataset.grade));
 });
 
 document.getElementById('srs-practice-extra-btn').addEventListener('click', () => {
@@ -1289,7 +1329,7 @@ document.getElementById('srs-go-builder-btn').addEventListener('click', () => {
   switchTab('builder');
 });
 
-// PC Keyboard Shortcuts for Kartičky
+// PC Keyboard Shortcuts for Kartičky (Space + Arrows + 1/2/3)
 document.addEventListener('keydown', (e) => {
   if (ui.activeTab !== 'cards' || ui.srsQueue.length === 0) return;
   const tag = document.activeElement?.tagName;
@@ -1300,9 +1340,16 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     flipFlashcard();
   } else if (ui.srsFlipped) {
-    if (e.key === '1') gradeCurrentCard('again');
-    else if (e.key === '2') gradeCurrentCard('hard');
-    else if (e.key === '3') gradeCurrentCard('good');
+    if (e.key === '1' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      animateAndGrade('again');
+    } else if (e.key === '2' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      animateAndGrade('hard');
+    } else if (e.key === '3' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      animateAndGrade('good');
+    }
   }
 });
 
@@ -2413,8 +2460,34 @@ document.getElementById('lang-select').addEventListener('change', async (e) => {
   showToast(`Přepnuto na: ${getLang().label}`);
 });
 
+// ==========================================
+// VELIKOST PÍSMA (pro starší i mladší uživatele)
+// ==========================================
+const FONT_SIZE_KEY = 'ticha_font_size';
+
+function applyFontSize(size) {
+  const isLarge = size === 'large';
+  document.documentElement.dataset.font = isLarge ? 'large' : 'normal';
+  localStorage.setItem(FONT_SIZE_KEY, isLarge ? 'large' : 'normal');
+  const normBtn = document.getElementById('font-size-normal');
+  const largeBtn = document.getElementById('font-size-large');
+  if (normBtn) normBtn.classList.toggle('active-mode', !isLarge);
+  if (largeBtn) largeBtn.classList.toggle('active-mode', isLarge);
+}
+
+document.getElementById('font-size-normal').addEventListener('click', () => {
+  applyFontSize('normal');
+  showToast('Velikost písma: Normální');
+});
+
+document.getElementById('font-size-large').addEventListener('click', () => {
+  applyFontSize('large');
+  showToast('Velikost písma: Větší Aa+');
+});
+
 // --- Init App (Kartičky jako 1. výchozí záložka!) ---
 async function initApp() {
+  applyFontSize(localStorage.getItem(FONT_SIZE_KEY) || 'normal');
   populateTopicSelects();
   await ensureLanguageLoaded(activeLangCode);
   state = loadState();
