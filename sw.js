@@ -1,9 +1,10 @@
-const CACHE_NAME = 'ticha-anglictina-v4';
+const CACHE_NAME = 'ticha-anglictina-v6';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './data.js',
+  './vocab-bank.js',
   './app.js',
   './manifest.webmanifest',
   './icons/icon.svg',

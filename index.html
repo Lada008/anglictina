@@ -40,6 +40,9 @@
           <span class="dot"></span>
           <span id="header-due-count">0</span>
         </div>
+        <button type="button" class="icon-btn theme-btn" id="guide-btn" aria-label="Návod k aplikaci" title="Návod k aplikaci">
+          ❓
+        </button>
         <button type="button" class="icon-btn theme-btn" id="theme-toggle-btn" aria-label="Přepnout tmavý režim" title="Tmavý / světlý režim">
           🌙
         </button>
@@ -260,7 +263,91 @@
         </div>
       </section>
 
-      <!-- 3. TAB: SLOVÍČKA A SDÍLENÍ -->
+      <!-- 3. TAB: MAPA & AI -->
+      <section id="view-journey" class="view" aria-label="Mapa progresu a AI" hidden>
+        <div class="segmented-control" id="journey-subtabs" role="tablist">
+          <button type="button" class="seg-btn active" data-jtab="map">🗺️ Mapa &amp; Slovíčka</button>
+          <button type="button" class="seg-btn" data-jtab="ai">🤖 AI Trenér</button>
+        </div>
+
+        <!-- Sub-view A: Progress Map & Visual Word Packs -->
+        <div id="jtab-map" class="jtab-panel">
+          <div class="card xp-card">
+            <div class="xp-header">
+              <div>
+                <div class="xp-level" id="xp-level-label">Úroveň 1 · Cestovatel</div>
+                <div class="xp-sub" id="xp-sub-label">0 XP · Zvládnuto 0 frází</div>
+              </div>
+              <div class="xp-badge" id="xp-badge">0 XP</div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="xp-progress-fill" style="width: 5%"></div>
+            </div>
+          </div>
+
+          <h2 class="section-heading">🗺️ Tvoje cesta tématy</h2>
+          <div id="progress-map" class="progress-map"></div>
+
+          <h2 class="section-heading">🖼️ Obrázkové balíčky slovíček (120+ základních slov)</h2>
+          <p class="muted-text compact-muted">Klepni na balíček, prohlédni si slovíčka s obrázky a přidej si je jedním kliknutím do Kartiček.</p>
+          <div id="vocab-packs-container" class="vocab-packs"></div>
+        </div>
+
+        <!-- Sub-view B: AI Trenér -->
+        <div id="jtab-ai" class="jtab-panel" hidden>
+          <details class="card ai-key-card" id="ai-key-details">
+            <summary class="ai-key-summary">
+              <span>🔑 Nastavení Google Gemini AI klíče</span>
+              <span class="ai-key-status" id="ai-key-status">Nenastaveno</span>
+            </summary>
+            <div class="ai-key-body">
+              <p class="muted-text">Klíč se ukládá <strong>pouze v tvém telefonu</strong> (nikam se neodesílá). Zdarma ho získáš za 30 sekund na <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.</p>
+              <div class="ai-key-row">
+                <input type="password" id="ai-api-key-input" placeholder="Vlož Gemini API klíč (AIza…)" autocomplete="off" />
+                <button type="button" class="btn btn-primary" id="ai-save-key-btn">Uložit</button>
+              </div>
+            </div>
+          </details>
+
+          <!-- AI Generator -->
+          <div class="card ai-card">
+            <h2>✨ AI Generátor vět a slovíček</h2>
+            <p class="muted-text">Napiš situaci na cestách nebo téma slovíček – AI připraví angličtinu, čistě českou výslovnost, obrázek i vysvětlení.</p>
+            <div class="quick-prompts">
+              <button type="button" class="quick-chip" data-prompt="5 praktických vět v autoservisu v zahraničí">🔧 Autoservis</button>
+              <button type="button" class="quick-chip" data-prompt="5 vět v kempu u recepce o prodloužení pobytu">⛺ Kemp</button>
+              <button type="button" class="quick-chip" data-prompt="8 nejpoužívanějších anglických slovíček na pláž a moře">🏖️ Pláž</button>
+              <button type="button" class="quick-chip" data-prompt="5 zdvořilých vět při zpoždění letu">✈️ Zpoždění</button>
+            </div>
+            <div class="ai-input-row">
+              <input type="text" id="ai-prompt-input" placeholder="Např. Jak říct v restauraci, že nechci cibuli?" />
+              <button type="button" class="btn btn-primary" id="ai-generate-btn">Vygenerovat</button>
+            </div>
+            <div id="ai-results" class="ai-results"></div>
+          </div>
+
+          <!-- AI Silent Roleplay -->
+          <div class="card ai-card">
+            <h2>💬 Tichý AI rozhovor (Roleplay)</h2>
+            <p class="muted-text">Procvič si reálnou situaci psaním bez mikrofonu. AI odpoví jednoduchou angličtinou a poradí česky.</p>
+            <div class="quick-prompts" id="roleplay-scenes">
+              <button type="button" class="quick-chip" data-scene="camping">⛺ Recepce kempu</button>
+              <button type="button" class="quick-chip" data-scene="restaurant">🍽️ Restaurace</button>
+              <button type="button" class="quick-chip" data-scene="airport">✈️ Letiště</button>
+              <button type="button" class="quick-chip" data-scene="pharmacy">💊 Lékárna</button>
+            </div>
+            <div id="roleplay-chat" class="roleplay-chat">
+              <div class="chat-placeholder">Vyber situaci výše a začni tichý rozhovor…</div>
+            </div>
+            <div class="ai-input-row">
+              <input type="text" id="roleplay-input" placeholder="Napiš odpověď anglicky (nebo česky o radu)…" />
+              <button type="button" class="btn btn-primary" id="roleplay-send-btn">Odeslat</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. TAB: SLOVÍČKA A SDÍLENÍ -->
       <section id="view-vocab" class="view" aria-label="Slovíčka a sdílení" hidden>
         <!-- Sub-navigation pills inside Tab 3 -->
         <div class="segmented-control" role="tablist">
@@ -369,7 +456,7 @@
       </section>
     </main>
 
-    <!-- Bottom Navigation Bar (3 main tabs) -->
+    <!-- Bottom Navigation Bar (4 tabs) -->
     <nav class="bottom-nav" aria-label="Hlavní navigace">
       <button type="button" class="nav-item active" data-tab="builder" id="nav-builder">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><path d="M14 17.5h7"></path><path d="M17.5 14v7"></path></svg>
@@ -381,6 +468,10 @@
           <span class="nav-badge" id="nav-due-badge" hidden>0</span>
         </span>
         <span>Kartičky</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="journey" id="nav-journey">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
+        <span id="nav-journey-label">Mapa &amp; AI</span>
       </button>
       <button type="button" class="nav-item" data-tab="vocab" id="nav-vocab">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -443,6 +534,74 @@
       <div class="tip-modal-en" id="tip-modal-en"></div>
       <div class="tip-modal-body" id="tip-modal-body"></div>
       <button type="button" class="btn btn-primary btn-full" id="tip-modal-ok">Jasně, chápu!</button>
+    </div>
+  </div>
+
+  <!-- App Guide Modal -->
+  <div id="guide-modal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Návod k aplikaci">
+    <div class="card modal-card guide-modal-card">
+      <div class="show-card-top">
+        <h2>❓ Návod – co kde najdeš</h2>
+        <button type="button" class="icon-btn icon-btn-sm" id="guide-modal-close" aria-label="Zavřít">✕</button>
+      </div>
+      <div class="guide-list">
+        <div class="guide-item">
+          <strong>🧩 Stavebnice</strong>
+          <p>V <em>Šablonách</em> klikej na zvýrazněné části v závorkách a měň varianty. Ve <em>Skládačce</em> skládej věty ze slov. Klepnutím na <strong>💡</strong> zjistíš, proč je věta takto složená.</p>
+        </div>
+        <div class="guide-item">
+          <strong>🃏 Kartičky (DuoCards styl)</strong>
+          <p>Opakování podle paměťového algoritmu (SRS). Klepni pro otočení, pak přejeď vlevo (Znovu) / vpravo (Umím) nebo použij 3 tlačítka dole.</p>
+        </div>
+        <div class="guide-item">
+          <strong>🗺️ Mapa &amp; AI</strong>
+          <p>Sleduj svoji <em>Mapu progresu</em>, přidávej obrázkové balíčky slovíček a trénuj s <em>AI Trenérem</em> (generátor vět na míru + tichý rozhovor).</p>
+        </div>
+        <div class="guide-item">
+          <strong>📚 Slovíčka a sdílení</strong>
+          <p>Vyhledávej, upravuj (✏️), přidávej vlastní věty a posílej balíčky přes WhatsApp. Každý telefon si ukládá svůj postup zvlášť.</p>
+        </div>
+        <div class="guide-item">
+          <strong>🔧 Ikony v kartách</strong>
+          <p><strong>📱</strong> Ukázat obsluze přes celý displej · <strong>🐢</strong> Pomalý poslech · <strong>🔊</strong> Normální poslech · <strong>💡</strong> Vysvětlení gramatiky · <strong>🌙</strong> Tmavý režim.</p>
+        </div>
+        <div class="guide-item mode-switch-box">
+          <strong>⚙️ Režim aplikace (s AI / bez AI)</strong>
+          <p>Můžeš kdykoli přepnout bez ztráty postupu:</p>
+          <div class="btn-grid-2">
+            <button type="button" class="btn btn-secondary" id="guide-mode-classic">🌿 Bez AI (offline)</button>
+            <button type="button" class="btn btn-secondary" id="guide-mode-ai">🤖 S AI Trenérem</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary btn-full" id="guide-modal-ok">Rozumím, jdu trénovat!</button>
+    </div>
+  </div>
+
+  <!-- First-Launch Mode Choice Modal (S AI / Bez AI) -->
+  <div id="mode-modal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Výběr verze aplikace">
+    <div class="card modal-card mode-modal-card">
+      <div class="mode-modal-head">
+        <div class="done-emoji">🤫</div>
+        <h2>Vítej v Tiché Angličtině!</h2>
+        <p class="muted-text">Vyber si verzi, která ti vyhovuje. Kdykoli ji můžeš přepnout v horní liště pod <strong>❓</strong>.</p>
+      </div>
+      <div class="mode-choice-list">
+        <button type="button" class="mode-choice-card" id="pick-mode-classic">
+          <div class="mode-choice-icon">🌿</div>
+          <div class="mode-choice-body">
+            <strong>Klasická verze (bez AI)</strong>
+            <span>100 % offline, ihned k použití bez nastavování. Stavebnice, Kartičky, Mapa progresu a obrázková slovíčka.</span>
+          </div>
+        </button>
+        <button type="button" class="mode-choice-card" id="pick-mode-ai">
+          <div class="mode-choice-icon">🤖</div>
+          <div class="mode-choice-body">
+            <strong>Verze s AI Trenérem</strong>
+            <span>Vše z klasické verze + generátor vlastních vět a tichý AI rozhovor přes bezplatný Gemini klíč.</span>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 

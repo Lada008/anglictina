@@ -1030,8 +1030,8 @@ textarea:focus {
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  grid-template-columns: repeat(4, 1fr);
+  padding: 6px 6px calc(8px + env(safe-area-inset-bottom));
   z-index: 30;
 }
 
@@ -1508,4 +1508,547 @@ textarea:focus {
   font-size: 0.94rem;
   line-height: 1.55;
   color: var(--text);
+}
+
+/* ==========================================
+   MAPA PROGRESU, OBRÁZKOVÁ SLOVÍČKA, AI & NÁVOD
+   ========================================== */
+.section-heading {
+  margin: 14px 0 8px;
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.compact-muted {
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+}
+
+.xp-card {
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.xp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.xp-level {
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.xp-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.xp-badge {
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-weight: 800;
+  font-size: 0.82rem;
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+/* Winding Duolingo-style Progress Map */
+.progress-map {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.map-node {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease;
+  text-align: left;
+  width: 100%;
+  color: var(--text);
+}
+
+.map-node:active {
+  transform: scale(0.98);
+}
+
+.map-node.mastered {
+  border-color: var(--success);
+}
+
+.map-node-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  border: 3px solid var(--primary);
+}
+
+.map-node.mastered .map-node-circle {
+  background: var(--success-soft);
+  border-color: var(--success);
+}
+
+.map-node-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.map-node-title {
+  font-weight: 750;
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+}
+
+.map-node-sub {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+.map-mini-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.map-mini-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.map-node.mastered .map-mini-fill {
+  background: var(--success);
+}
+
+.map-node-go {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Visual Word Packs */
+.vocab-packs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pack-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.pack-summary {
+  list-style: none;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.pack-summary::-webkit-details-marker {
+  display: none;
+}
+
+.pack-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pack-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+}
+
+.pack-title {
+  font-weight: 750;
+  font-size: 0.92rem;
+}
+
+.pack-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.pack-content {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.pack-add-all-row {
+  padding: 10px 0;
+}
+
+.pack-words-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.word-pic-card {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+}
+
+.word-pic-emoji {
+  font-size: 1.85rem;
+  line-height: 1.1;
+}
+
+.word-pic-en {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--primary-text);
+}
+
+.word-pic-cz {
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.word-pic-ph {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.word-pic-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* AI Trenér */
+.ai-key-card {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.ai-key-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.86rem;
+  font-weight: 750;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ai-key-summary::-webkit-details-marker {
+  display: none;
+}
+
+.ai-key-status {
+  font-size: 0.74rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+}
+
+.ai-key-status.ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.ai-key-body {
+  margin-top: 10px;
+}
+
+.ai-key-body a {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.ai-key-row,
+.ai-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ai-key-row input,
+.ai-input-row input {
+  flex: 1;
+  min-width: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 9px 11px;
+  font-size: 0.88rem;
+  background: var(--surface-soft);
+  color: var(--text);
+  outline: none;
+}
+
+.ai-key-row .btn,
+.ai-input-row .btn {
+  flex: 0 0 auto;
+  padding: 9px 13px;
+}
+
+.ai-card {
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.ai-card h2 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.quick-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.quick-chip {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.quick-chip:active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.ai-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ai-result-item {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-result-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-result-en {
+  font-weight: 750;
+  font-size: 0.94rem;
+  color: var(--primary-text);
+}
+
+.ai-result-cz {
+  font-size: 0.84rem;
+  color: var(--text);
+}
+
+.ai-result-tip {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Roleplay Chat */
+.roleplay-chat {
+  min-height: 120px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-placeholder {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+  margin: auto 0;
+}
+
+.chat-bubble {
+  max-width: 88%;
+  padding: 8px 11px;
+  border-radius: 14px;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.chat-bubble.ai {
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.chat-cz-tip {
+  margin-top: 4px;
+  font-size: 0.76rem;
+  color: var(--primary-text);
+  border-top: 1px dashed var(--border);
+  padding-top: 4px;
+}
+
+/* Guide Modal */
+.guide-modal-card {
+  max-height: 85dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.guide-item {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.guide-item strong {
+  display: block;
+  font-size: 0.88rem;
+  margin-bottom: 3px;
+}
+
+.guide-item p {
+  margin: 0;
+  font-size: 0.81rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* Mode Choice Modal (S AI / Bez AI) */
+.mode-modal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mode-modal-head {
+  text-align: center;
+}
+
+.mode-modal-head h2 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+}
+
+.mode-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mode-choice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface-soft);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+}
+
+.mode-choice-card:active {
+  transform: scale(0.98);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.mode-choice-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-size: 1.45rem;
+  flex-shrink: 0;
+}
+
+.mode-choice-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mode-choice-body strong {
+  font-size: 0.96rem;
+}
+
+.mode-choice-body span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.mode-switch-box .btn.active-mode {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
 }
