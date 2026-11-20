@@ -2784,3 +2784,22 @@ textarea:focus {
   transform: translateY(2px);
   border-bottom-width: 2px;
 }
+
+.goal-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lt-feedback-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 26px;
+  margin-bottom: 8px;
+}
+
+.lt-feedback-row .lt-feedback {
+  margin-bottom: 0;
+}

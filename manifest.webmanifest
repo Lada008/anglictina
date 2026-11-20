@@ -1,7 +1,7 @@
 {
-  "name": "Angličtina na cesty",
-  "short_name": "Angličtina na cesty",
-  "description": "Tichý offline trénink angličtiny, němčiny a španělštiny bez mikrofonu. Kartičky, stavebnice vět, mapa a slovíčka.",
+  "name": "Cizí jazyky na cesty",
+  "short_name": "Jazyky na cesty",
+  "description": "Tichý offline trénink angličtiny, němčiny, polštiny a španělštiny bez mikrofonu. Kartičky, stavebnice vět, mapa a 8 000 slovíček.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

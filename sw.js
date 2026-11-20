@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ticha-anglictina-v13';
+const CACHE_NAME = 'ticha-anglictina-v14';
 const ASSETS = [
   './',
   './index.html',
@@ -20,6 +20,21 @@ const ASSETS = [
   './vocab-p2.js',
   './vocab-p3.js',
   './vocab-p4.js',
+  './de/de_phrases_templates.js',
+  './de/de_vocabulary_part_1.js',
+  './de/de_vocabulary_part_2.js',
+  './de/de_vocabulary_part_3.js',
+  './de/de_vocabulary_part_4.js',
+  './pl/pl_phrases_templates.js',
+  './pl/pl_vocabulary_part_1.js',
+  './pl/pl_vocabulary_part_2.js',
+  './pl/pl_vocabulary_part_3.js',
+  './pl/pl_vocabulary_part_4.js',
+  './es/es_phrases_templates.js',
+  './es/es_vocabulary_part_1.js',
+  './es/es_vocabulary_part_2.js',
+  './es/es_vocabulary_part_3.js',
+  './es/es_vocabulary_part_4.js',
   './app.js',
   './manifest.webmanifest',
   './icons/icon.svg',

@@ -1,46 +1,130 @@
 import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES, TOPIC_ILLUSTRATIONS, VOCABULARY } from './data.js';
 import { VOCAB_PACKS } from './vocab-bank.js';
-import { DE_PHRASES, DE_TEMPLATES, DE_VOCAB_PACKS, DE_VOCABULARY } from './lang-de.js';
-import { ES_PHRASES, ES_TEMPLATES, ES_VOCAB_PACKS, ES_VOCABULARY } from './lang-es.js';
+import { DE_PHRASES, DE_TEMPLATES } from './lang-de.js';
+import { ES_PHRASES, ES_TEMPLATES } from './lang-es.js';
 
 const ACTIVE_LANG_KEY = 'ticha_lang_active';
+
+function normalizePhrase(p) {
+  return { ...p, en: (p.en ?? p.target ?? '').trim() };
+}
+
+function normalizeTemplate(t) {
+  return {
+    ...t,
+    parts: (t.parts || []).map((part) => {
+      if (part.type === 'text') {
+        return { ...part, en: part.en ?? part.target ?? '' };
+      }
+      return {
+        ...part,
+        options: (part.options || []).map((opt) => ({
+          ...opt,
+          en: opt.en ?? opt.target ?? ''
+        }))
+      };
+    })
+  };
+}
+
+function buildTopicPacks(vocabList, code) {
+  const colors = {
+    general: '#e0e7ff',
+    camping: '#ccfbf1',
+    restaurant: '#fef3c7',
+    shopping: '#e0f2fe',
+    airport: '#ede9fe',
+    problems: '#fee2e2'
+  };
+  return TOPICS.map((t, idx) => {
+    const words = vocabList.filter((w) => w.topic === t.id);
+    return {
+      id: `${code}-pack-${t.id}`,
+      topic: t.id,
+      title: `${idx + 1}. ${t.label}`,
+      icon: t.icon,
+      color: colors[t.id] || '#e0e7ff',
+      words
+    };
+  }).filter((p) => p.words.length > 0);
+}
+
+function mergeById(primary, secondary) {
+  const seen = new Set(primary.map((x) => x.id));
+  const out = [...primary];
+  secondary.forEach((x) => {
+    if (!seen.has(x.id)) {
+      seen.add(x.id);
+      out.push(x);
+    }
+  });
+  return out;
+}
 
 const LANGUAGES = {
   en: {
     code: 'en',
     label: 'Angličtina',
     upper: 'ANGLICKY',
-    speechLang: 'en-US',
+    adj: 'anglické',
+    adjCap: 'Anglická',
+    adjMasc: 'anglický',
+    speechLang: 'en-GB',
     voicePrefix: 'en',
     storageKey: 'ticha_anglictina_v1',
-    phrases: INITIAL_PHRASES,
-    templates: SENTENCE_TEMPLATES,
+    loaded: true,
+    phrases: INITIAL_PHRASES.map(normalizePhrase),
+    templates: SENTENCE_TEMPLATES.map(normalizeTemplate),
     packs: VOCAB_PACKS,
-    vocabulary: VOCABULARY
+    vocabulary: VOCABULARY.map(normalizePhrase)
   },
   de: {
     code: 'de',
     label: 'Němčina',
     upper: 'NĚMECKY',
+    adj: 'německé',
+    adjCap: 'Německá',
+    adjMasc: 'německý',
     speechLang: 'de-DE',
     voicePrefix: 'de',
     storageKey: 'ticha_anglictina_v1_de',
-    phrases: DE_PHRASES,
-    templates: DE_TEMPLATES,
-    packs: DE_VOCAB_PACKS,
-    vocabulary: DE_VOCABULARY
+    loaded: false,
+    phrases: DE_PHRASES.map(normalizePhrase),
+    templates: DE_TEMPLATES.map(normalizeTemplate),
+    packs: [],
+    vocabulary: []
+  },
+  pl: {
+    code: 'pl',
+    label: 'Polština',
+    upper: 'POLSKY',
+    adj: 'polské',
+    adjCap: 'Polská',
+    adjMasc: 'polský',
+    speechLang: 'pl-PL',
+    voicePrefix: 'pl',
+    storageKey: 'ticha_anglictina_v1_pl',
+    loaded: false,
+    phrases: [],
+    templates: [],
+    packs: [],
+    vocabulary: []
   },
   es: {
     code: 'es',
     label: 'Španělština',
     upper: 'ŠPANĚLSKY',
+    adj: 'španělské',
+    adjCap: 'Španělská',
+    adjMasc: 'španělský',
     speechLang: 'es-ES',
     voicePrefix: 'es',
     storageKey: 'ticha_anglictina_v1_es',
-    phrases: ES_PHRASES,
-    templates: ES_TEMPLATES,
-    packs: ES_VOCAB_PACKS,
-    vocabulary: ES_VOCABULARY
+    loaded: false,
+    phrases: ES_PHRASES.map(normalizePhrase),
+    templates: ES_TEMPLATES.map(normalizeTemplate),
+    packs: [],
+    vocabulary: []
   }
 };
 
@@ -49,6 +133,81 @@ if (!LANGUAGES[activeLangCode]) activeLangCode = 'en';
 
 function getLang() {
   return LANGUAGES[activeLangCode] || LANGUAGES.en;
+}
+
+async function ensureLanguageLoaded(code) {
+  const cfg = LANGUAGES[code];
+  if (!cfg || cfg.loaded) return;
+
+  try {
+    if (code === 'de') {
+      const [pt, v1, v2, v3, v4] = await Promise.all([
+        import('./de/de_phrases_templates.js'),
+        import('./de/de_vocabulary_part_1.js'),
+        import('./de/de_vocabulary_part_2.js'),
+        import('./de/de_vocabulary_part_3.js'),
+        import('./de/de_vocabulary_part_4.js')
+      ]);
+      cfg.phrases = mergeById(
+        (pt.PHRASES_DE || []).map(normalizePhrase),
+        DE_PHRASES.map(normalizePhrase)
+      );
+      cfg.templates = mergeById(
+        (pt.TEMPLATES_DE || []).map(normalizeTemplate),
+        DE_TEMPLATES.map(normalizeTemplate)
+      );
+      cfg.vocabulary = [
+        ...v1.VOCABULARY_DE_PART_1,
+        ...v2.VOCABULARY_DE_PART_2,
+        ...v3.VOCABULARY_DE_PART_3,
+        ...v4.VOCABULARY_DE_PART_4
+      ].map((w) => ({ ...normalizePhrase(w), img: w.img || getTopicMeta(w.topic).icon }));
+      cfg.packs = buildTopicPacks(cfg.vocabulary, 'de');
+    } else if (code === 'pl') {
+      const [pt, v1, v2, v3, v4] = await Promise.all([
+        import('./pl/pl_phrases_templates.js'),
+        import('./pl/pl_vocabulary_part_1.js'),
+        import('./pl/pl_vocabulary_part_2.js'),
+        import('./pl/pl_vocabulary_part_3.js'),
+        import('./pl/pl_vocabulary_part_4.js')
+      ]);
+      cfg.phrases = (pt.PHRASES_PL || []).map(normalizePhrase);
+      cfg.templates = (pt.TEMPLATES_PL || []).map(normalizeTemplate);
+      cfg.vocabulary = [
+        ...v1.VOCABULARY_PL_PART_1,
+        ...v2.VOCABULARY_PL_PART_2,
+        ...v3.VOCABULARY_PL_PART_3,
+        ...v4.VOCABULARY_PL_PART_4
+      ].map((w) => ({ ...normalizePhrase(w), img: w.img || getTopicMeta(w.topic).icon }));
+      cfg.packs = buildTopicPacks(cfg.vocabulary, 'pl');
+    } else if (code === 'es') {
+      const [pt, v1, v2, v3, v4] = await Promise.all([
+        import('./es/es_phrases_templates.js'),
+        import('./es/es_vocabulary_part_1.js'),
+        import('./es/es_vocabulary_part_2.js'),
+        import('./es/es_vocabulary_part_3.js'),
+        import('./es/es_vocabulary_part_4.js')
+      ]);
+      cfg.phrases = mergeById(
+        (pt.PHRASES_ES || []).map(normalizePhrase),
+        ES_PHRASES.map(normalizePhrase)
+      );
+      cfg.templates = mergeById(
+        (pt.TEMPLATES_ES || []).map(normalizeTemplate),
+        ES_TEMPLATES.map(normalizeTemplate)
+      );
+      cfg.vocabulary = [
+        ...v1.VOCABULARY_ES_PART_1,
+        ...v2.VOCABULARY_ES_PART_2,
+        ...v3.VOCABULARY_ES_PART_3,
+        ...v4.VOCABULARY_ES_PART_4
+      ].map((w) => ({ ...normalizePhrase(w), img: w.img || getTopicMeta(w.topic).icon }));
+      cfg.packs = buildTopicPacks(cfg.vocabulary, 'es');
+    }
+    cfg.loaded = true;
+  } catch {
+    showToast(`Nepodařilo se načíst soubory pro jazyk ${cfg.label}.`);
+  }
 }
 
 // --- Date Helpers ---
@@ -232,7 +391,7 @@ function loadState() {
     });
     const today = todayISO();
     lang.phrases.forEach((p) => {
-      if (p.id.startsWith('ext-') && !existingIds.has(p.id)) {
+      if (!existingIds.has(p.id) && (p.id.startsWith('ext-') || lang.code !== 'en')) {
         parsed.cards.push({ ...p, interval: 0, reps: 0, dueDate: today });
         migrated = true;
       }
@@ -850,10 +1009,12 @@ document.getElementById('puz-solved-tip-btn').addEventListener('click', openCurr
 // ==========================================
 function initSrsSession(forceExtra = false) {
   const today = todayISO();
+  const topicFilter = document.getElementById('srs-topic-filter')?.value || 'all';
+  const pool = topicFilter === 'all' ? state.cards : state.cards.filter((c) => c.topic === topicFilter);
   ui.srsExtraMode = forceExtra;
   const due = forceExtra
-    ? shuffleArray(state.cards).slice(0, 10)
-    : state.cards.filter((c) => c.dueDate <= today);
+    ? shuffleArray(pool).slice(0, 10)
+    : pool.filter((c) => c.dueDate <= today);
 
   ui.srsQueue = due.map((c) => c.id);
   ui.srsDoneCount = 0;
@@ -861,6 +1022,10 @@ function initSrsSession(forceExtra = false) {
   ui.srsFlipped = false;
   renderSrsCard();
 }
+
+document.getElementById('srs-topic-filter').addEventListener('change', () => {
+  initSrsSession(false);
+});
 
 function getNextGoodInterval(card) {
   if (!card.interval || card.interval === 0) return 3;
@@ -1158,6 +1323,7 @@ document.querySelectorAll('[data-vtab]').forEach((btn) => {
 });
 
 function populateTopicSelects() {
+  const srsSel = document.getElementById('srs-topic-filter');
   const filterSel = document.getElementById('vocab-topic-filter');
   const dictSel = document.getElementById('dict-topic-filter');
   const addSel = document.getElementById('add-topic');
@@ -1165,6 +1331,7 @@ function populateTopicSelects() {
   const editSel = document.getElementById('edit-topic');
 
   TOPICS.forEach((t) => {
+    if (srsSel) srsSel.add(new Option(`${t.icon} ${t.shortLabel}`, t.id));
     filterSel.add(new Option(`${t.icon} ${t.label}`, t.id));
     if (dictSel) dictSel.add(new Option(`${t.icon} ${t.label}`, t.id));
     addSel.add(new Option(`${t.icon} ${t.label}`, t.id));
@@ -1996,6 +2163,7 @@ function renderLevelTestQuestion() {
   const fb = document.getElementById('lt-feedback');
   fb.textContent = '';
   fb.className = 'lt-feedback';
+  document.getElementById('lt-speak-btn').hidden = true;
   document.getElementById('lt-next-btn').hidden = true;
 
   const optsEl = document.getElementById('lt-options');
@@ -2033,6 +2201,11 @@ function handleLevelTestAnswer(chosen, btnEl, q) {
     fb.className = 'lt-feedback err';
   }
   document.getElementById('lt-score-live').textContent = `Správně: ${levelTest.score}`;
+  const spkBtn = document.getElementById('lt-speak-btn');
+  if (spkBtn) {
+    spkBtn.hidden = false;
+    spkBtn.dataset.text = q.en;
+  }
   const nextBtn = document.getElementById('lt-next-btn');
   nextBtn.textContent =
     levelTest.current + 1 < levelTest.questions.length ? 'Další otázka →' : 'Zobrazit výsledek 🏆';
@@ -2162,23 +2335,46 @@ document.getElementById('guide-replay-tutorial').addEventListener('click', () =>
   openTutorialModal();
 });
 
+document.getElementById('lt-speak-btn').addEventListener('click', (e) => {
+  const txt = e.currentTarget.dataset.text;
+  if (txt) speakEnglish(txt, e.currentTarget, 0.9);
+});
+
 // ==========================================
-// PŘEPÍNAČ JAZYKŮ (🇬🇧 EN / 🇩🇪 DE / 🇪🇸 ES)
+// PŘEPÍNAČ JAZYKŮ (🇬🇧 EN / 🇩🇪 DE / 🇵🇱 PL / 🇪🇸 ES)
 // ==========================================
 function syncLangUI() {
   const lang = getLang();
   const sel = document.getElementById('lang-select');
   if (sel) sel.value = lang.code;
+
   const dictBtn = document.getElementById('dict-subtab-btn');
-  if (dictBtn) dictBtn.textContent = `📖 ${lang.vocabulary.length} slov`;
+  if (dictBtn) dictBtn.textContent = `📖 ${lang.vocabulary.length.toLocaleString('cs-CZ')} slov`;
+
+  const customSlot = document.getElementById('tpl-custom-slot-input');
+  if (customSlot) customSlot.placeholder = `✏️ Nebo napiš vlastní ${lang.adj} slovo…`;
+
+  const addLbl = document.getElementById('add-en-label');
+  if (addLbl) addLbl.textContent = `${lang.adjCap} věta`;
+
+  const editLbl = document.getElementById('edit-en-label');
+  if (editLbl) editLbl.textContent = `${lang.adjCap} věta`;
+
+  const ltPrompt = document.getElementById('lt-prompt-label');
+  if (ltPrompt) ltPrompt.textContent = `Vyber správný ${lang.adjMasc} překlad:`;
+
+  const cardBackHint = document.getElementById('card-lang-back-hint');
+  if (cardBackHint) cardBackHint.textContent = lang.upper;
 }
 
-document.getElementById('lang-select').addEventListener('change', (e) => {
+document.getElementById('lang-select').addEventListener('change', async (e) => {
   const nextCode = e.target.value;
   if (!LANGUAGES[nextCode] || nextCode === activeLangCode) return;
   const prevTheme = state.theme;
   activeLangCode = nextCode;
   localStorage.setItem(ACTIVE_LANG_KEY, activeLangCode);
+
+  await ensureLanguageLoaded(activeLangCode);
   state = loadState();
   state.theme = prevTheme;
   saveState();
@@ -2207,14 +2403,20 @@ document.getElementById('lang-select').addEventListener('change', (e) => {
 });
 
 // --- Init App (Kartičky jako 1. výchozí záložka!) ---
-syncLangUI();
-applyTheme(state.theme);
-populateTopicSelects();
-renderBuilderTopics();
-renderTemplate();
-updateDueIndicators();
-checkUrlPack();
-initSrsSession();
-if (!state.tutorialSeen) {
-  openTutorialModal();
+async function initApp() {
+  populateTopicSelects();
+  await ensureLanguageLoaded(activeLangCode);
+  state = loadState();
+  syncLangUI();
+  applyTheme(state.theme);
+  renderBuilderTopics();
+  renderTemplate();
+  updateDueIndicators();
+  checkUrlPack();
+  initSrsSession();
+  if (!state.tutorialSeen) {
+    openTutorialModal();
+  }
 }
+
+initApp();
