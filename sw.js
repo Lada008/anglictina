@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ticha-anglictina-v14';
+const CACHE_NAME = 'ticha-anglictina-v15';
 const ASSETS = [
   './',
   './index.html',
@@ -8,8 +8,6 @@ const ASSETS = [
   './fonts/plus-jakarta-sans-latin.woff2',
   './fonts/plus-jakarta-sans-latin-ext.woff2',
   './data.js',
-  './lang-de.js',
-  './lang-es.js',
   './extra_phrases_templates.js',
   './vocabulary_part_1.js',
   './vocabulary_part_2.js',

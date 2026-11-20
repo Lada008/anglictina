@@ -1,7 +1,5 @@
 import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES, TOPIC_ILLUSTRATIONS, VOCABULARY } from './data.js';
 import { VOCAB_PACKS } from './vocab-bank.js';
-import { DE_PHRASES, DE_TEMPLATES } from './lang-de.js';
-import { ES_PHRASES, ES_TEMPLATES } from './lang-es.js';
 
 const ACTIVE_LANG_KEY = 'ticha_lang_active';
 
@@ -66,6 +64,7 @@ const LANGUAGES = {
     code: 'en',
     label: 'Angličtina',
     upper: 'ANGLICKY',
+    adv: 'anglicky',
     adj: 'anglické',
     adjCap: 'Anglická',
     adjMasc: 'anglický',
@@ -82,6 +81,7 @@ const LANGUAGES = {
     code: 'de',
     label: 'Němčina',
     upper: 'NĚMECKY',
+    adv: 'německy',
     adj: 'německé',
     adjCap: 'Německá',
     adjMasc: 'německý',
@@ -89,8 +89,8 @@ const LANGUAGES = {
     voicePrefix: 'de',
     storageKey: 'ticha_anglictina_v1_de',
     loaded: false,
-    phrases: DE_PHRASES.map(normalizePhrase),
-    templates: DE_TEMPLATES.map(normalizeTemplate),
+    phrases: [],
+    templates: [],
     packs: [],
     vocabulary: []
   },
@@ -98,6 +98,7 @@ const LANGUAGES = {
     code: 'pl',
     label: 'Polština',
     upper: 'POLSKY',
+    adv: 'polsky',
     adj: 'polské',
     adjCap: 'Polská',
     adjMasc: 'polský',
@@ -114,6 +115,7 @@ const LANGUAGES = {
     code: 'es',
     label: 'Španělština',
     upper: 'ŠPANĚLSKY',
+    adv: 'španělsky',
     adj: 'španělské',
     adjCap: 'Španělská',
     adjMasc: 'španělský',
@@ -121,8 +123,8 @@ const LANGUAGES = {
     voicePrefix: 'es',
     storageKey: 'ticha_anglictina_v1_es',
     loaded: false,
-    phrases: ES_PHRASES.map(normalizePhrase),
-    templates: ES_TEMPLATES.map(normalizeTemplate),
+    phrases: [],
+    templates: [],
     packs: [],
     vocabulary: []
   }
@@ -148,14 +150,8 @@ async function ensureLanguageLoaded(code) {
         import('./de/de_vocabulary_part_3.js'),
         import('./de/de_vocabulary_part_4.js')
       ]);
-      cfg.phrases = mergeById(
-        (pt.PHRASES_DE || []).map(normalizePhrase),
-        DE_PHRASES.map(normalizePhrase)
-      );
-      cfg.templates = mergeById(
-        (pt.TEMPLATES_DE || []).map(normalizeTemplate),
-        DE_TEMPLATES.map(normalizeTemplate)
-      );
+      cfg.phrases = (pt.PHRASES_DE || []).map(normalizePhrase);
+      cfg.templates = (pt.TEMPLATES_DE || []).map(normalizeTemplate);
       cfg.vocabulary = [
         ...v1.VOCABULARY_DE_PART_1,
         ...v2.VOCABULARY_DE_PART_2,
@@ -188,14 +184,8 @@ async function ensureLanguageLoaded(code) {
         import('./es/es_vocabulary_part_3.js'),
         import('./es/es_vocabulary_part_4.js')
       ]);
-      cfg.phrases = mergeById(
-        (pt.PHRASES_ES || []).map(normalizePhrase),
-        ES_PHRASES.map(normalizePhrase)
-      );
-      cfg.templates = mergeById(
-        (pt.TEMPLATES_ES || []).map(normalizeTemplate),
-        ES_TEMPLATES.map(normalizeTemplate)
-      );
+      cfg.phrases = (pt.PHRASES_ES || []).map(normalizePhrase);
+      cfg.templates = (pt.TEMPLATES_ES || []).map(normalizeTemplate);
       cfg.vocabulary = [
         ...v1.VOCABULARY_ES_PART_1,
         ...v2.VOCABULARY_ES_PART_2,
@@ -371,16 +361,27 @@ function loadState() {
     }
 
     const initMap = new Map(lang.phrases.map((p) => [p.id, p]));
-    const existingIds = new Set(parsed.cards.map((c) => c.id));
     let migrated = false;
+
+    // Pro DE / PL / ES odeber staré výchozí fráze, které už nejsou v uživatelských složkách (/de, /pl, /es)
+    if (lang.code !== 'en' && lang.loaded) {
+      const prefix = `${lang.code}-`;
+      const beforeLen = parsed.cards.length;
+      parsed.cards = parsed.cards.filter((c) => {
+        if (c.id.startsWith(prefix) && !initMap.has(c.id)) return false;
+        return true;
+      });
+      if (parsed.cards.length !== beforeLen) migrated = true;
+    }
+
+    const existingIds = new Set(parsed.cards.map((c) => c.id));
     parsed.cards.forEach((c) => {
       const def = initMap.get(c.id);
       if (def) {
-        if (c.phonetic !== def.phonetic) {
+        if (c.en !== def.en || c.cz !== def.cz || c.phonetic !== def.phonetic || c.tip !== def.tip) {
+          c.en = def.en;
+          c.cz = def.cz;
           c.phonetic = def.phonetic;
-          migrated = true;
-        }
-        if (!c.tip && def.tip) {
           c.tip = def.tip;
           migrated = true;
         }
@@ -2365,6 +2366,16 @@ function syncLangUI() {
 
   const cardBackHint = document.getElementById('card-lang-back-hint');
   if (cardBackHint) cardBackHint.textContent = lang.upper;
+
+  const codeUpper = lang.code.toUpperCase();
+  const bankSearch = document.getElementById('bank-search');
+  if (bankSearch) bankSearch.placeholder = `Hledat ve 2 000 slovíčkách (CZ / ${codeUpper})…`;
+
+  const dictSearch = document.getElementById('dict-search');
+  if (dictSearch) dictSearch.placeholder = `Hledat ve 2 000 slovíčkách (CZ / ${codeUpper})…`;
+
+  const vocabSearch = document.getElementById('vocab-search');
+  if (vocabSearch) vocabSearch.placeholder = `Hledat česky, ${lang.adv} nebo téma…`;
 }
 
 document.getElementById('lang-select').addEventListener('change', async (e) => {
