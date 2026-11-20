@@ -1,5 +1,5 @@
 import { TOPICS, INITIAL_PHRASES, SENTENCE_TEMPLATES, TOPIC_ILLUSTRATIONS } from './data.js';
-import { VOCAB_PACKS } from './vocab-bank.js';
+import { VOCAB_PACKS, TOTAL_VOCAB_COUNT } from './vocab-bank.js';
 
 const STORAGE_KEY = 'ticha_anglictina_v1';
 const AI_KEY_STORAGE = 'ticha_anglictina_gemini_key';
@@ -329,6 +329,7 @@ const ui = {
   builderMode: 'templates',
   tplIndex: 0,
   tplSlots: {},
+  tplCustomSlots: {},
   activeSlotIdx: null,
   puzIndex: 0,
   puzTokens: [],
@@ -442,11 +443,18 @@ function buildTemplateResult(tpl) {
       cz += part.cz;
       phonetic += part.phonetic;
     } else {
-      const optIdx = ui.tplSlots[slotCounter] ?? 0;
-      const opt = part.options[optIdx] || part.options[0];
-      en += opt.en;
-      cz += opt.cz;
-      phonetic += opt.phonetic;
+      const custom = ui.tplCustomSlots[slotCounter];
+      if (custom) {
+        en += custom;
+        cz += custom;
+        phonetic += custom;
+      } else {
+        const optIdx = ui.tplSlots[slotCounter] ?? 0;
+        const opt = part.options[optIdx] || part.options[0];
+        en += opt.en;
+        cz += opt.cz;
+        phonetic += opt.phonetic;
+      }
       slotCounter++;
     }
   });
@@ -489,7 +497,8 @@ function renderTemplate() {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = `slot-pill ${ui.activeSlotIdx === currentSlotIdx ? 'selected' : ''}`;
-      btn.textContent = `[${opt.en} ▾]`;
+      const displayWord = ui.tplCustomSlots[currentSlotIdx] || opt.en;
+      btn.textContent = `[${displayWord} ▾]`;
       btn.addEventListener('click', () => {
         ui.activeSlotIdx = ui.activeSlotIdx === currentSlotIdx ? null : currentSlotIdx;
         renderTemplate();
@@ -510,14 +519,18 @@ function renderTemplate() {
     activeSlot.options.forEach((opt, oIdx) => {
       const oBtn = document.createElement('button');
       oBtn.type = 'button';
-      oBtn.className = `slot-option-btn ${oIdx === activeSlot.selected ? 'active' : ''}`;
+      const isActive = !ui.tplCustomSlots[activeSlot.idx] && oIdx === activeSlot.selected;
+      oBtn.className = `slot-option-btn ${isActive ? 'active' : ''}`;
       oBtn.textContent = `${opt.en} (${opt.cz})`;
       oBtn.addEventListener('click', () => {
+        delete ui.tplCustomSlots[activeSlot.idx];
         ui.tplSlots[activeSlot.idx] = oIdx;
         renderTemplate();
       });
       optionsWrap.appendChild(oBtn);
     });
+    const customInp = document.getElementById('tpl-custom-slot-input');
+    if (customInp) customInp.value = ui.tplCustomSlots[activeSlot.idx] || '';
   } else {
     picker.hidden = true;
   }
@@ -535,9 +548,29 @@ document.getElementById('tpl-tip-btn').addEventListener('click', () => {
   openTipModal(buildTemplateResult(tpl).en, tpl.tip);
 });
 
+function applyCustomSlotWord() {
+  if (ui.activeSlotIdx === null) return;
+  const val = document.getElementById('tpl-custom-slot-input').value.trim();
+  if (!val) {
+    delete ui.tplCustomSlots[ui.activeSlotIdx];
+  } else {
+    ui.tplCustomSlots[ui.activeSlotIdx] = val;
+  }
+  renderTemplate();
+}
+
+document.getElementById('tpl-custom-slot-apply').addEventListener('click', applyCustomSlotWord);
+document.getElementById('tpl-custom-slot-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    applyCustomSlotWord();
+  }
+});
+
 document.getElementById('tpl-prev-btn').addEventListener('click', () => {
   ui.tplIndex--;
   ui.tplSlots = {};
+  ui.tplCustomSlots = {};
   ui.activeSlotIdx = null;
   renderTemplate();
 });
@@ -545,6 +578,7 @@ document.getElementById('tpl-prev-btn').addEventListener('click', () => {
 document.getElementById('tpl-next-btn').addEventListener('click', () => {
   ui.tplIndex++;
   ui.tplSlots = {};
+  ui.tplCustomSlots = {};
   ui.activeSlotIdx = null;
   renderTemplate();
 });
@@ -1476,7 +1510,40 @@ function addVocabWordToCards(word, topicId) {
   return true;
 }
 
+function createWordPicCard(w, topicId, existingSet) {
+  const isAdded = existingSet.has(w.en.toLowerCase());
+  const item = document.createElement('div');
+  item.className = 'word-pic-card';
+  item.innerHTML = `
+    <div class="word-pic-emoji">${w.img}</div>
+    <div class="word-pic-en"></div>
+    <div class="word-pic-cz"></div>
+    <div class="word-pic-ph"></div>
+    <div class="word-pic-actions">
+      <button type="button" class="mini-btn w-speak" title="Poslechnout">🔊</button>
+      <button type="button" class="mini-btn w-add" ${isAdded ? 'disabled' : ''}>${isAdded ? '✓' : '+ Přidat'}</button>
+    </div>
+  `;
+  item.querySelector('.word-pic-en').textContent = w.en;
+  item.querySelector('.word-pic-cz').textContent = w.cz;
+  item.querySelector('.word-pic-ph').textContent = w.phonetic;
+  item.querySelector('.w-speak').addEventListener('click', (e) => speakEnglish(w.en, e.currentTarget, 0.9));
+  item.querySelector('.w-add').addEventListener('click', (e) => {
+    if (addVocabWordToCards(w, topicId)) {
+      existingSet.add(w.en.toLowerCase());
+      saveState();
+      e.currentTarget.textContent = '✓';
+      e.currentTarget.disabled = true;
+      showToast(`„${w.en}“ přidáno do kartiček!`);
+    }
+  });
+  return item;
+}
+
 function renderVocabPacks() {
+  const heading = document.getElementById('vocab-packs-heading');
+  if (heading) heading.textContent = `🖼️ Slovník ${TOTAL_VOCAB_COUNT.toLocaleString('cs-CZ')} nejpoužívanějších slovíček`;
+
   const container = document.getElementById('vocab-packs-container');
   container.innerHTML = '';
   const existingSet = new Set(state.cards.map((c) => c.en.toLowerCase()));
@@ -1497,12 +1564,29 @@ function renderVocabPacks() {
         <span class="tip-bar-arrow">▾</span>
       </summary>
       <div class="pack-content">
-        <div class="pack-add-all-row">
-          <button type="button" class="btn btn-primary btn-full pack-add-all-btn">+ Přidat celý balíček do kartiček</button>
+        <div class="pack-add-all-row btn-grid-2">
+          <button type="button" class="btn btn-primary pack-add-10-btn">+ Přidat 10 nových</button>
+          <button type="button" class="btn btn-secondary pack-add-all-btn">+ Všech ${pack.words.length}</button>
         </div>
         <div class="pack-words-grid"></div>
       </div>
     `;
+
+    details.querySelector('.pack-add-10-btn').addEventListener('click', () => {
+      let added = 0;
+      for (const w of pack.words) {
+        if (added >= 10) break;
+        if (addVocabWordToCards(w, pack.topic)) added++;
+      }
+      if (added > 0) {
+        saveState();
+        renderVocabPacks();
+        renderProgressMap();
+        showToast(`Přidáno ${added} nových slovíček do kartiček!`);
+      } else {
+        showToast('Všechna slovíčka z balíčku už máš v kartičkách.');
+      }
+    });
 
     details.querySelector('.pack-add-all-btn').addEventListener('click', () => {
       let added = 0;
@@ -1519,36 +1603,58 @@ function renderVocabPacks() {
       }
     });
 
-    const grid = details.querySelector('.pack-words-grid');
-    pack.words.forEach((w) => {
-      const isAdded = existingSet.has(w.en.toLowerCase());
-      const item = document.createElement('div');
-      item.className = 'word-pic-card';
-      item.innerHTML = `
-        <div class="word-pic-emoji">${w.img}</div>
-        <div class="word-pic-en">${w.en}</div>
-        <div class="word-pic-cz">${w.cz}</div>
-        <div class="word-pic-ph">${w.phonetic}</div>
-        <div class="word-pic-actions">
-          <button type="button" class="mini-btn w-speak" title="Poslechnout">🔊</button>
-          <button type="button" class="mini-btn w-add" ${isAdded ? 'disabled' : ''}>${isAdded ? '✓' : '+ Přidat'}</button>
-        </div>
-      `;
-      item.querySelector('.w-speak').addEventListener('click', (e) => speakEnglish(w.en, e.currentTarget, 0.9));
-      item.querySelector('.w-add').addEventListener('click', (e) => {
-        if (addVocabWordToCards(w, pack.topic)) {
-          saveState();
-          e.currentTarget.textContent = '✓';
-          e.currentTarget.disabled = true;
-          showToast(`„${w.en}“ přidáno do kartiček!`);
-        }
-      });
-      grid.appendChild(item);
+    // Lazy render slovíček až při rozkliknutí balíčku (blesková rychlost na mobilu!)
+    let rendered = false;
+    details.addEventListener('toggle', () => {
+      if (!details.open || rendered) return;
+      rendered = true;
+      const grid = details.querySelector('.pack-words-grid');
+      const frag = document.createDocumentFragment();
+      pack.words.forEach((w) => frag.appendChild(createWordPicCard(w, pack.topic, existingSet)));
+      grid.appendChild(frag);
     });
 
     container.appendChild(details);
   });
 }
+
+document.getElementById('bank-search').addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  const resEl = document.getElementById('bank-search-results');
+  const packsEl = document.getElementById('vocab-packs-container');
+
+  if (!q) {
+    resEl.hidden = true;
+    resEl.innerHTML = '';
+    packsEl.hidden = false;
+    return;
+  }
+
+  packsEl.hidden = true;
+  resEl.hidden = false;
+  resEl.innerHTML = '';
+
+  const existingSet = new Set(state.cards.map((c) => c.en.toLowerCase()));
+  const matches = [];
+  for (const pack of VOCAB_PACKS) {
+    for (const w of pack.words) {
+      if (w.en.toLowerCase().includes(q) || w.cz.toLowerCase().includes(q)) {
+        matches.push({ w, topic: pack.topic });
+        if (matches.length >= 36) break;
+      }
+    }
+    if (matches.length >= 36) break;
+  }
+
+  if (!matches.length) {
+    resEl.innerHTML = '<div class="muted-text" style="grid-column:1/-1;">Žádné slovíčko nenalezeno.</div>';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  matches.forEach(({ w, topic }) => frag.appendChild(createWordPicCard(w, topic, existingSet)));
+  resEl.appendChild(frag);
+});
 
 // --- AI Trenér (Google Gemini API, BYOK) ---
 function getAiKey() {
@@ -1809,8 +1915,72 @@ function selectAppMode(isAi, closeModals = true) {
   showToast(isAi ? 'Přepnuto na verzi s AI Trenérem 🤖' : 'Přepnuto na klasickou offline verzi 🌿');
 }
 
-document.getElementById('pick-mode-classic').addEventListener('click', () => selectAppMode(false));
-document.getElementById('pick-mode-ai').addEventListener('click', () => selectAppMode(true));
+let tutStep = 0;
+let tutSelectedAi = false;
+
+function renderTutorialStep() {
+  document.querySelectorAll('.tut-step').forEach((el) => {
+    el.hidden = Number(el.dataset.step) !== tutStep;
+  });
+  document.querySelectorAll('#tut-dots .tut-dot').forEach((dot, idx) => {
+    dot.classList.toggle('active', idx === tutStep);
+  });
+  document.getElementById('tut-prev-btn').textContent = tutStep === 0 ? 'Přeskočit' : '← Zpět';
+  document.getElementById('tut-next-btn').textContent = tutStep === 3 ? 'Začít trénovat! 🚀' : 'Další →';
+}
+
+function openTutorialModal() {
+  tutStep = 0;
+  tutSelectedAi = Boolean(state.aiEnabled);
+  document.getElementById('pick-mode-classic').classList.toggle('selected-choice', !tutSelectedAi);
+  document.getElementById('pick-mode-ai').classList.toggle('selected-choice', tutSelectedAi);
+  renderTutorialStep();
+  document.getElementById('mode-modal').hidden = false;
+}
+
+function finishTutorial() {
+  state.aiEnabled = tutSelectedAi;
+  saveState();
+  applyAiMode(state.aiEnabled);
+  document.getElementById('mode-modal').hidden = true;
+  showToast(tutSelectedAi ? 'Nastavena verze s AI Trenérem 🤖' : 'Nastavena klasická offline verze 🌿');
+}
+
+document.getElementById('pick-mode-classic').addEventListener('click', () => {
+  tutSelectedAi = false;
+  document.getElementById('pick-mode-classic').classList.add('selected-choice');
+  document.getElementById('pick-mode-ai').classList.remove('selected-choice');
+});
+
+document.getElementById('pick-mode-ai').addEventListener('click', () => {
+  tutSelectedAi = true;
+  document.getElementById('pick-mode-ai').classList.add('selected-choice');
+  document.getElementById('pick-mode-classic').classList.remove('selected-choice');
+});
+
+document.getElementById('tut-prev-btn').addEventListener('click', () => {
+  if (tutStep === 0) {
+    finishTutorial();
+  } else {
+    tutStep--;
+    renderTutorialStep();
+  }
+});
+
+document.getElementById('tut-next-btn').addEventListener('click', () => {
+  if (tutStep < 3) {
+    tutStep++;
+    renderTutorialStep();
+  } else {
+    finishTutorial();
+  }
+});
+
+document.getElementById('guide-replay-tutorial').addEventListener('click', () => {
+  closeGuideModal();
+  openTutorialModal();
+});
+
 document.getElementById('guide-mode-classic').addEventListener('click', () => selectAppMode(false, false));
 document.getElementById('guide-mode-ai').addEventListener('click', () => selectAppMode(true, false));
 
@@ -1827,7 +1997,7 @@ function initAppMode() {
 
   if (state.aiEnabled === null || state.aiEnabled === undefined) {
     applyAiMode(false);
-    document.getElementById('mode-modal').hidden = false;
+    openTutorialModal();
   } else {
     applyAiMode(state.aiEnabled);
   }

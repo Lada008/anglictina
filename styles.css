@@ -2052,3 +2052,88 @@ textarea:focus {
   color: #ffffff;
   border-color: var(--primary);
 }
+
+/* Custom Slot Input in Stavebnice */
+.custom-slot-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.custom-slot-row input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 6px 9px;
+  font-size: 0.82rem;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+
+.custom-slot-row input:focus {
+  border-color: var(--primary);
+}
+
+#bank-search-results {
+  margin-bottom: 12px;
+}
+
+/* Interactive 4-Step Onboarding Tutorial */
+.tut-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+
+.tut-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: all 0.2s ease;
+}
+
+.tut-dot.active {
+  width: 24px;
+  background: var(--primary);
+}
+
+.mode-choice-card.selected-choice {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.tut-demo-box {
+  background: var(--surface-soft);
+  border: 1px dashed var(--primary);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.tut-demo-box small {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.tut-pill {
+  display: inline-block;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-weight: 750;
+}
+
+.tut-nav-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}

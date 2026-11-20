@@ -1,4 +1,5 @@
 export const TOPICS = [
+  { id: 'general', label: 'Běžná konverzace', shortLabel: 'Běžná mluva', icon: '💬' },
   { id: 'camping', label: 'Kempování a cestování autem', shortLabel: 'Kemp & auto', icon: '⛺' },
   { id: 'restaurant', label: 'Restaurace a jídlo', shortLabel: 'Restaurace', icon: '🍽️' },
   { id: 'shopping', label: 'Nákupy', shortLabel: 'Nákupy', icon: '🛍️' },
@@ -7,6 +8,16 @@ export const TOPICS = [
 ];
 
 export const TOPIC_ILLUSTRATIONS = {
+  general: `<svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="120" height="72" rx="14" fill="#E0E7FF"/>
+    <rect x="18" y="16" width="54" height="32" rx="10" fill="#4F46E5"/>
+    <path d="M28 48 L22 57 L38 48 Z" fill="#4F46E5"/>
+    <rect x="28" y="26" width="32" height="4" rx="2" fill="#FFFFFF"/>
+    <rect x="28" y="34" width="22" height="4" rx="2" fill="#C7D2FE"/>
+    <rect x="52" y="28" width="50" height="30" rx="10" fill="#FFFFFF" stroke="#4F46E5" stroke-width="2"/>
+    <rect x="62" y="38" width="28" height="4" rx="2" fill="#4F46E5"/>
+    <rect x="62" y="46" width="18" height="4" rx="2" fill="#94A3B8"/>
+  </svg>`,
   camping: `<svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <rect width="120" height="72" rx="14" fill="#CCFBF1"/>
     <path d="M0 58 Q30 46 60 56 T120 52 L120 72 L0 72 Z" fill="#5EEAD4"/>
@@ -314,6 +325,77 @@ export const INITIAL_PHRASES = [
  * Každá šablona obsahuje i vysvětlení stavby věty (tip).
  */
 export const SENTENCE_TEMPLATES = [
+  // Běžná konverzace (obecné univerzální věty)
+  {
+    id: 'tpl-gen-1',
+    topic: 'general',
+    tip: '„I would like to…“ (Chtěl bych / Rád bych…) + základní tvar slovesa. Je to jedna z nejužitečnějších a nejzdvořilejších vazeb v celé angličtině.',
+    parts: [
+      { type: 'text', en: 'I would like to ', cz: 'Chtěl bych ', phonetic: 'aj vud lajk tu ' },
+      {
+        type: 'slot',
+        options: [
+          { en: 'buy this', cz: 'koupit tohle', phonetic: 'baj dis' },
+          { en: 'visit the museum', cz: 'navštívit muzeum', phonetic: 'vizit de mjúzím' },
+          { en: 'learn more English', cz: 'naučit se víc anglicky', phonetic: 'lérn mór ingliš' },
+          { en: 'take a photo', cz: 'udělat fotku', phonetic: 'tejk e foutou' }
+        ]
+      },
+      { type: 'text', en: '.', cz: '.', phonetic: '.' }
+    ]
+  },
+  {
+    id: 'tpl-gen-2',
+    topic: 'general',
+    tip: 'Pozor na slovosled u nepřímé otázky „Do you know where…?“ (Nevíte, kde…?) — sloveso „is“ stojí až na samém konci věty!',
+    parts: [
+      { type: 'text', en: 'Do you know where ', cz: 'Nevíte, kde je ', phonetic: 'dú jů nou vér ' },
+      {
+        type: 'slot',
+        options: [
+          { en: 'the nearest pharmacy', cz: 'nejbližší lékárna', phonetic: 'de nírist fármesi' },
+          { en: 'the bus stop', cz: 'autobusová zastávka', phonetic: 'de bas stop' },
+          { en: 'the toilet', cz: 'záchod', phonetic: 'de tojlit' }
+        ]
+      },
+      { type: 'text', en: ' is?', cz: '?', phonetic: ' iz?' }
+    ]
+  },
+  {
+    id: 'tpl-gen-3',
+    topic: 'general',
+    tip: '„Could you help me…?“ (Mohl byste mi pomoci…?) + základní tvar slovesa (bez „to“). Funguje v každé každodenní situaci.',
+    parts: [
+      { type: 'text', en: 'Could you help me ', cz: 'Mohl byste mi pomoci ', phonetic: 'kud jů help mí ' },
+      {
+        type: 'slot',
+        options: [
+          { en: 'find this place', cz: 'najít tohle místo', phonetic: 'fajnd dis plejs' },
+          { en: 'translate this', cz: 'přeložit tohle', phonetic: 'trenslejt dis' },
+          { en: 'carry this bag', cz: 'odnést tuhle tašku', phonetic: 'keri dis beg' }
+        ]
+      },
+      { type: 'text', en: ', please?', cz: ', prosím?', phonetic: ', plíz?' }
+    ]
+  },
+  {
+    id: 'tpl-gen-4',
+    topic: 'general',
+    tip: 'U otázek o tom, co se někomu líbí nebo co potřebuje, dáváme na začátek „Do you…?“ a za něj základní sloveso.',
+    parts: [
+      { type: 'text', en: 'Do you ', cz: '', phonetic: 'dú jů ' },
+      {
+        type: 'slot',
+        options: [
+          { en: 'have time today', cz: 'Máte dnes čas', phonetic: 'hev tajm tudej' },
+          { en: 'need any help', cz: 'Potřebujete pomoct', phonetic: 'níd eni help' },
+          { en: 'understand me', cz: 'Rozumíte mi', phonetic: 'andrstend mí' }
+        ]
+      },
+      { type: 'text', en: '?', cz: '?', phonetic: '?' }
+    ]
+  },
+
   // Kempování a cestování autem
   {
     id: 'tpl-camp-1',

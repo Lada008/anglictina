@@ -90,6 +90,10 @@
 
             <div class="slot-picker" id="tpl-slot-picker" hidden>
               <div class="slot-options" id="tpl-slot-options"></div>
+              <div class="custom-slot-row">
+                <input type="text" id="tpl-custom-slot-input" placeholder="✏️ Nebo napiš vlastní anglické slovo…" />
+                <button type="button" class="mini-btn" id="tpl-custom-slot-apply">Použít</button>
+              </div>
             </div>
 
             <div class="divider"></div>
@@ -288,8 +292,13 @@
           <h2 class="section-heading">🗺️ Tvoje cesta tématy</h2>
           <div id="progress-map" class="progress-map"></div>
 
-          <h2 class="section-heading">🖼️ Obrázkové balíčky slovíček (120+ základních slov)</h2>
-          <p class="muted-text compact-muted">Klepni na balíček, prohlédni si slovíčka s obrázky a přidej si je jedním kliknutím do Kartiček.</p>
+          <h2 class="section-heading" id="vocab-packs-heading">🖼️ Slovník 2 000 nejpoužívanějších slovíček</h2>
+          <p class="muted-text compact-muted">Vyhledej jakékoli slovíčko nebo rozklikni tematický balíček a přidej si ho do Kartiček.</p>
+          <div class="search-box">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="search" id="bank-search" placeholder="Hledat ve 2 000 slovíčkách (CZ / EN)…" autocomplete="off" />
+          </div>
+          <div id="bank-search-results" class="pack-words-grid" hidden></div>
           <div id="vocab-packs-container" class="vocab-packs"></div>
         </div>
 
@@ -574,33 +583,88 @@
           </div>
         </div>
       </div>
+      <button type="button" class="btn btn-secondary btn-full" id="guide-replay-tutorial">🎓 Spustit úvodního průvodce znovu</button>
       <button type="button" class="btn btn-primary btn-full" id="guide-modal-ok">Rozumím, jdu trénovat!</button>
     </div>
   </div>
 
-  <!-- First-Launch Mode Choice Modal (S AI / Bez AI) -->
-  <div id="mode-modal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Výběr verze aplikace">
+  <!-- Interactive 4-Step Onboarding Tutorial & Mode Choice -->
+  <div id="mode-modal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Úvodní průvodce aplikací">
     <div class="card modal-card mode-modal-card">
-      <div class="mode-modal-head">
-        <div class="done-emoji">🤫</div>
-        <h2>Vítej v Tiché Angličtině!</h2>
-        <p class="muted-text">Vyber si verzi, která ti vyhovuje. Kdykoli ji můžeš přepnout v horní liště pod <strong>❓</strong>.</p>
+      <div class="tut-dots" id="tut-dots">
+        <span class="tut-dot active"></span>
+        <span class="tut-dot"></span>
+        <span class="tut-dot"></span>
+        <span class="tut-dot"></span>
       </div>
-      <div class="mode-choice-list">
-        <button type="button" class="mode-choice-card" id="pick-mode-classic">
-          <div class="mode-choice-icon">🌿</div>
-          <div class="mode-choice-body">
-            <strong>Klasická verze (bez AI)</strong>
-            <span>100 % offline, ihned k použití bez nastavování. Stavebnice, Kartičky, Mapa progresu a obrázková slovíčka.</span>
-          </div>
-        </button>
-        <button type="button" class="mode-choice-card" id="pick-mode-ai">
-          <div class="mode-choice-icon">🤖</div>
-          <div class="mode-choice-body">
-            <strong>Verze s AI Trenérem</strong>
-            <span>Vše z klasické verze + generátor vlastních vět a tichý AI rozhovor přes bezplatný Gemini klíč.</span>
-          </div>
-        </button>
+
+      <!-- Step 0: Welcome & Mode Choice -->
+      <div class="tut-step" data-step="0">
+        <div class="mode-modal-head">
+          <div class="done-emoji">🤫</div>
+          <h2>Vítej v Tiché Angličtině!</h2>
+          <p class="muted-text">Trénuj každodenní i cestovatelskou angličtinu kdekoli bez mikrofonu. Nejdřív si vyber verzi:</p>
+        </div>
+        <div class="mode-choice-list">
+          <button type="button" class="mode-choice-card selected-choice" id="pick-mode-classic">
+            <div class="mode-choice-icon">🌿</div>
+            <div class="mode-choice-body">
+              <strong>Klasická verze (bez AI)</strong>
+              <span>100 % offline, ihned k použití. Stavebnice, 2 000 slovíček, Kartičky a Mapa progresu.</span>
+            </div>
+          </button>
+          <button type="button" class="mode-choice-card" id="pick-mode-ai">
+            <div class="mode-choice-icon">🤖</div>
+            <div class="mode-choice-body">
+              <strong>Verze s AI Trenérem</strong>
+              <span>Vše z klasické verze + generování vlastních vět a tichý AI rozhovor přes bezplatný Gemini klíč.</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 1: Stavebnice -->
+      <div class="tut-step" data-step="1" hidden>
+        <div class="mode-modal-head">
+          <div class="done-emoji">🧩</div>
+          <h2>1. Stavebnice vět a gramatika</h2>
+          <p class="muted-text">Klikej na zvýrazněné části v závorkách a měň slovíčka — můžeš dopsat i <strong>vlastní slovo</strong>! Pod ikonou <strong>💡</strong> vždy najdeš jednoduché vysvětlení, proč je věta takto poskládaná.</p>
+        </div>
+        <div class="tut-demo-box">
+          Could we get a pitch <span class="tut-pill">[with electricity ▾]</span>?<br />
+          <small>💡 Klepnutím na „+ Do kartiček“ si větu uložíš k opakování.</small>
+        </div>
+      </div>
+
+      <!-- Step 2: 2000 slovíček & Kartičky -->
+      <div class="tut-step" data-step="2" hidden>
+        <div class="mode-modal-head">
+          <div class="done-emoji">🗺️</div>
+          <h2>2. 2 000 slovíček &amp; Kartičky</h2>
+          <p class="muted-text">V záložce <strong>Mapa</strong> najdeš přehled <strong>2 000 nejpoužívanějších slovíček</strong> s obrázky a čistě českou výslovností. V <strong>Kartičkách</strong> pak opakuješ přejetím prstu doleva (Znovu) nebo doprava (Umím).</p>
+        </div>
+        <div class="tut-demo-box">
+          🚗 <strong>car</strong> [kár] – auto &nbsp;·&nbsp; 💊 <strong>pharmacy</strong> [fármesi] – lékárna<br />
+          <small>🔥 Za každé opakování získáváš XP a buduješ denní sérii.</small>
+        </div>
+      </div>
+
+      <!-- Step 3: Praktické vychytávky -->
+      <div class="tut-step" data-step="3" hidden>
+        <div class="mode-modal-head">
+          <div class="done-emoji">📱</div>
+          <h2>3. Pomocník na cesty i sdílení</h2>
+          <p class="muted-text">Tlačítko <strong>📱</strong> zvětší větu přes celý displej, abys ji mohl ukázat obsluze. <strong>🐢</strong> přečte větu pomalu. Ve <strong>Slovíčkách</strong> můžeš přidávat vlastní věty a posílat balíčky přes WhatsApp.</p>
+        </div>
+        <div class="tut-demo-box">
+          📱 Celý displej &nbsp;·&nbsp; 🐢 Pomalu &nbsp;·&nbsp; 🔊 Poslech &nbsp;·&nbsp; 🌙 Tmavý režim<br />
+          <small>❓ Tohoto průvodce i přepínač AI najdeš kdykoli pod otazníkem nahoře.</small>
+        </div>
+      </div>
+
+      <div class="tut-nav-row">
+        <button type="button" class="btn btn-secondary" id="tut-prev-btn">Přeskočit</button>
+        <button type="button" class="btn btn-primary" id="tut-next-btn">Další →</button>
       </div>
     </div>
   </div>
